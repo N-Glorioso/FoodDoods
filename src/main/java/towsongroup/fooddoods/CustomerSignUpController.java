@@ -39,6 +39,15 @@ public class CustomerSignUpController {
         String payment = paymentField.getText();
 
         // implement the SQL query
+
+        FXMLLoader loader = new FXMLLoader(App.class.getResource("customerScene.fxml"));
+        try {
+            Pane pane = loader.load();
+            anchorPane.getChildren().clear();
+            anchorPane.getChildren().add(pane);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
