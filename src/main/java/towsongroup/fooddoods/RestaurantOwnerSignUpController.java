@@ -36,6 +36,15 @@ public class RestaurantOwnerSignUpController {
         String eMailAddress = eMailAddressField.getText();
         String restaurantName = restaurantNameField.getText();
         String restaurantAddress = restaurantAddressField.getText();
+
+        FXMLLoader loader = new FXMLLoader(App.class.getResource("restaurantOwnerScene.fxml"));
+        try {
+            Pane pane = loader.load();
+            anchorPane.getChildren().clear();
+            anchorPane.getChildren().add(pane);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML

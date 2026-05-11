@@ -33,6 +33,15 @@ public class RestaurantEmployeeSignUpController {
         String phoneNumber = phoneNumberField.getText();
         String eMailAddress = eMailAddressField.getText();
         String restaurantName = restaurantNameField.getText();
+
+        FXMLLoader loader = new FXMLLoader(App.class.getResource("restaurantEmployeeScene.fxml"));
+        try {
+            Pane pane = loader.load();
+            anchorPane.getChildren().clear();
+            anchorPane.getChildren().add(pane);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML

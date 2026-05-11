@@ -60,7 +60,7 @@ public class RestaurantEmployeeController {
     }
 
     @FXML
-    private void attemptUpdate() {
+    private void updateAccount() {
         String userName = userNameField.getText();
         String passWord = passWordField.getText();
         String name = nameField.getText();

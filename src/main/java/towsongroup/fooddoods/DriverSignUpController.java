@@ -33,6 +33,15 @@ public class DriverSignUpController {
         String phoneNumber = phoneNumberField.getText();
         String eMailAddress = eMailAddressField.getText();
         String vehicleInfo = vehicleField.getText();
+
+        FXMLLoader loader = new FXMLLoader(App.class.getResource("driverScene.fxml"));
+        try {
+            Pane pane = loader.load();
+            anchorPane.getChildren().clear();
+            anchorPane.getChildren().add(pane);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
