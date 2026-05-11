@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane fx:id="anchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="towsongroup.fooddoods.CustomerController">
+   <children>
+      <TabPane prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+          <Tab text="Place New Order">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <ScrollPane layoutX="14.0" layoutY="32.0" prefHeight="146.0" prefWidth="281.0">
+                           <content>
+                              <ListView prefHeight="200.0" prefWidth="267.0" />
+                           </content>
+                        </ScrollPane>
+                        <Label layoutX="14.0" layoutY="14.0" text="Restaurant" />
+                        <Label layoutX="300.0" layoutY="14.0" text="Menu" />
+                        <ScrollPane layoutX="304.0" layoutY="32.0" prefHeight="146.0" prefWidth="281.0">
+                           <content>
+                              <ListView prefHeight="200.0" prefWidth="267.0" />
+                           </content>
+                        </ScrollPane>
+                        <ScrollPane layoutX="14.0" layoutY="211.0" prefHeight="146.0" prefWidth="281.0">
+                           <content>
+                              <ListView prefHeight="200.0" prefWidth="267.0" />
+                           </content>
+                        </ScrollPane>
+                        <Label layoutX="14.0" layoutY="192.0" text="Order" />
+                        <Button layoutX="509.0" layoutY="332.0" mnemonicParsing="false" text="Place Order" />
+                     </children></AnchorPane>
+            </content>
+          </Tab>
+          <Tab text="View My Orders">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <ScrollPane layoutX="18.0" layoutY="14.0" prefHeight="344.0" prefWidth="564.0">
+                           <content>
+                              <ListView prefHeight="544.0" prefWidth="550.0" />
+                           </content>
+                        </ScrollPane>
+                     </children></AnchorPane>
+            </content>
+          </Tab>
+            <Tab text="Account Details">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <Label layoutX="15.0" layoutY="8.0" text="Username">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="userNameField" layoutX="14.0" layoutY="32.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Label layoutX="15.0" layoutY="57.0" text="Password">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="passWordField" layoutX="14.0" layoutY="81.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Label layoutX="15.0" layoutY="106.0" text="Name">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="nameField" layoutX="14.0" layoutY="130.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Label layoutX="15.0" layoutY="155.0" text="Phone Number">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="phoneNumberField" layoutX="14.0" layoutY="179.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Label layoutX="15.0" layoutY="205.0" text="eMail Address">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="eMailAddressField" layoutX="14.0" layoutY="229.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Label layoutX="16.0" layoutY="255.0" text="Street Address">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="addressField" layoutX="14.0" layoutY="279.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Label layoutX="16.0" layoutY="305.0" text="Credit Card Number">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="paymentField" layoutX="14.0" layoutY="329.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Button layoutX="479.0" layoutY="329.0" mnemonicParsing="false" onAction="#attemptUpdate" text="Update Account" />
+                        <Button layoutX="365.0" layoutY="329.0" mnemonicParsing="false" onAction="#returnToLanding" prefHeight="25.0" prefWidth="99.0" text="Log Out" />
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+        </tabs>
+      </TabPane>
+   </children>
+</AnchorPane>

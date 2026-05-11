@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane fx:id="anchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="towsongroup.fooddoods.RestaurantEmployeeController">
+   <children>
+      <TabPane prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+          <Tab text="Current Orders">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <Button layoutX="29.0" layoutY="311.0" mnemonicParsing="false" text="Reject Order" />
+                        <Button layoutX="431.0" layoutY="311.0" mnemonicParsing="false" text="Mark Ready for Pickup" />
+                        <ScrollPane layoutX="15.0" layoutY="14.0" prefHeight="264.0" prefWidth="571.0">
+                          <content>
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="496.0" prefWidth="556.0">
+                                 <children>
+                                    <ListView prefHeight="400.0" prefWidth="557.0" />
+                                 </children>
+                              </AnchorPane>
+                          </content>
+                        </ScrollPane>
+                     </children></AnchorPane>
+            </content>
+          </Tab>
+            <Tab text="Menu">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <Button layoutX="29.0" layoutY="311.0" mnemonicParsing="false" text="Mark Available" />
+                        <Button layoutX="456.0" layoutY="311.0" mnemonicParsing="false" text="Mark Unavailable" />
+                        <ScrollPane layoutX="15.0" layoutY="14.0" prefHeight="264.0" prefWidth="571.0">
+                           <content>
+                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="451.0" prefWidth="556.0">
+                                 <children>
+                                    <ListView prefHeight="389.0" prefWidth="559.0" />
+                                 </children>
+                              </AnchorPane>
+                           </content>
+                        </ScrollPane>
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+            <Tab text="Account">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <Label layoutX="17.0" layoutY="62.0" text="Username">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="userNameField" layoutX="15.0" layoutY="86.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Label layoutX="17.0" layoutY="112.0" text="Password">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="passWordField" layoutX="15.0" layoutY="136.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Label layoutX="18.0" layoutY="162.0" text="Name">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="nameField" layoutX="15.0" layoutY="186.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Label layoutX="17.0" layoutY="208.0" text="Phone Number">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="phoneNumberField" layoutX="15.0" layoutY="232.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Label layoutX="18.0" layoutY="257.0" text="eMail Address">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="eMailAddressField" layoutX="17.0" layoutY="282.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Label layoutX="17.0" layoutY="308.0" text="Restaurant Name">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="restaurantNameField" layoutX="17.0" layoutY="332.0" prefHeight="25.0" prefWidth="147.0" />
+                        <Button layoutX="485.0" layoutY="332.0" mnemonicParsing="false" onAction="#attemptUpdate" text="Update Account" />
+                        <Button layoutX="369.0" layoutY="332.0" mnemonicParsing="false" onAction="#returnToLanding" prefHeight="25.0" prefWidth="100.0" text="Log Out" />
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+        </tabs>
+      </TabPane>
+   </children>
+</AnchorPane>
