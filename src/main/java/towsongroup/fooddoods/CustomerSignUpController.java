@@ -2,12 +2,15 @@ package towsongroup.fooddoods;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 
 public class CustomerSignUpController {
 
@@ -30,15 +33,48 @@ public class CustomerSignUpController {
 
     @FXML
     private void attemptSignUp() {
-        String userName = userNameField.getText();
-        String passWord = passWordField.getText();
-        String name = nameField.getText();
-        String phoneNumber = phoneNumberField.getText();
-        String eMailAddress = eMailAddressField.getText();
-        String address = addressField.getText();
-        String payment = paymentField.getText();
+        try {
+            Connection conn = State.getConn();
 
-        // implement the SQL query
+            PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO Customer (C_ID, C_Name, Payment_Info, Address, C_Phone_Num, C_Email, C_Username, C_Password)\n" +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
+
+            String name = nameField.getText();
+            String payment = paymentField.getText();
+            String address = addressField.getText();
+            String phoneNumber = phoneNumberField.getText();
+            String eMail = eMailAddressField.getText();
+            String userName = userNameField.getText();
+            String passWord = passWordField.getText();
+
+            ps.setString(1, "0");
+            ps.setString(2, name);
+            State.name = name;
+            ps.setString(3, payment);
+            State.payment = payment;
+            ps.setString(4, address);
+            State.homeAddress = address;
+            ps.setString(5, phoneNumber);
+            State.phoneNumber = phoneNumber;
+            ps.setString(6, eMail);
+            State.eMailAddress = eMail;
+            ps.setString(7, userName);
+            State.userName = userName;
+            ps.setString(8, passWord);
+            State.passWord = passWord;
+
+            ps.executeUpdate();
+
+            Alert successsAlert = new Alert(Alert.AlertType.INFORMATION);
+            successsAlert.setContentText("Account creation successful");
+            successsAlert.show();
+        } catch (Exception e) {
+            Alert exceptionAlert = new Alert(Alert.AlertType.ERROR);
+            exceptionAlert.setContentText(e.getMessage());
+            exceptionAlert.show();
+            return;
+        }
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("customerScene.fxml"));
         try {
@@ -57,6 +93,7 @@ public class CustomerSignUpController {
             Pane pane = loader.load();
             anchorPane.getChildren().clear();
             anchorPane.getChildren().add(pane);
+            State.reset();
         } catch (IOException e) {
             e.printStackTrace();
         }
