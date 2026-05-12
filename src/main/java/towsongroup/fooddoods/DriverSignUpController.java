@@ -10,6 +10,7 @@ import javafx.scene.layout.Pane;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class DriverSignUpController {
 
@@ -43,7 +44,20 @@ public class DriverSignUpController {
             String eMailAddress = eMailAddressField.getText();
             String vehicleInfo = vehicleField.getText();
 
-            ps.setString(1, "0");
+            // Generate ID and check availability
+            int randID = (int) (Math.random() * 1000000);
+            PreparedStatement getIDs = conn.prepareStatement("SELECT Driver_ID FROM Driver");
+            ResultSet ids = getIDs.executeQuery();
+            outerloop: while (true) {
+                randID = (int) (Math.random() * 1000000);
+                while (ids.next()) {
+                    if (randID == ids.getInt(1)) {
+                        continue outerloop;
+                    }
+                }
+                break;
+            }
+            ps.setString(1, Integer.toString(randID));
             ps.setString(2, name);
             State.name = name;
             ps.setString(3, vehicleInfo);
