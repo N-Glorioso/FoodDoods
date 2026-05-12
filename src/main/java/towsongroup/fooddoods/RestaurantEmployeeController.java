@@ -225,6 +225,14 @@ public class RestaurantEmployeeController {
                             "AND MI_Restaurant_ID = ?"
             );
 
+            String availString;
+
+            if (availability == 1) {
+                availString = "Available";
+            } else {
+                availString = "Unavailable";
+            }
+
             statement.setInt(1, availability);
             statement.setString(2, menuItemID);
             statement.setString(3, getRestaurantID());
@@ -237,7 +245,7 @@ public class RestaurantEmployeeController {
                 showError("No menu item found with that ID");
             }
         } catch (Exception e) {
-            showError(e.getMessage());
+            e.printStackTrace();
         }
     }
 

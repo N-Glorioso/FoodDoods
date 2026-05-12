@@ -98,7 +98,7 @@ public class LogInController {
                 loader = new FXMLLoader(App.class.getResource("restaurantEmployeeScene.fxml"));
             }else if (selection.equals("Restaurant Owner")) {
                 PreparedStatement ps = conn.prepareStatement("SELECT * FROM Restaurant_Owner " +
-                        "WHERE C_Username = ? AND C_Password = ?;");
+                        "WHERE RO_Username = ? AND RO_Password = ?;");
 
                 ps.setString(1, userNameField.getText());
                 ps.setString(2, passWordField.getText());

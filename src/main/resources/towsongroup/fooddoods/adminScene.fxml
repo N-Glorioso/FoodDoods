@@ -9,49 +9,103 @@
 
     <children>
 
-        <!-- CUSTOMER LIST -->
-        <ListView fx:id="customerListView"
-                  layoutX="20"
-                  layoutY="20"
-                  prefHeight="300"
-                  prefWidth="250"/>
+        <TabPane layoutX="10" layoutY="10" prefHeight="500" prefWidth="700">
 
-        <!-- DETAIL FIELDS (optional admin view) -->
-        <TextField fx:id="userNameField"
-                   layoutX="300"
-                   layoutY="30"
-                   promptText="Username"/>
+            <!-- ===================== -->
+            <!-- CUSTOMER TAB -->
+            <!-- ===================== -->
+            <tabs>
 
-        <TextField fx:id="nameField"
-                   layoutX="300"
-                   layoutY="70"
-                   promptText="Name"/>
+                <Tab text="Customers">
+                    <AnchorPane>
 
-        <TextField fx:id="emailField"
-                   layoutX="300"
-                   layoutY="110"
-                   promptText="Email"/>
+                        <ListView fx:id="customerListView"
+                                  layoutX="20"
+                                  layoutY="20"
+                                  prefHeight="350"
+                                  prefWidth="250"/>
 
-        <TextField fx:id="phoneField"
-                   layoutX="300"
-                   layoutY="150"
-                   promptText="Phone"/>
+                        <TextField fx:id="custUserNameField"
+                                   layoutX="300"
+                                   layoutY="30"
+                                   promptText="Username"/>
 
-        <!-- BUTTONS -->
-        <Button text="Delete Customer"
-                layoutX="300"
-                layoutY="220"
-                onAction="#deleteCustomer"/>
+                        <TextField fx:id="custNameField"
+                                   layoutX="300"
+                                   layoutY="70"
+                                   promptText="Name"/>
 
-        <Button text="Refresh"
-                layoutX="450"
-                layoutY="220"
-                onAction="#refreshCustomers"/>
+                        <TextField fx:id="custEmailField"
+                                   layoutX="300"
+                                   layoutY="110"
+                                   promptText="Email"/>
 
-        <Button text="Back"
-                layoutX="300"
-                layoutY="270"
-                onAction="#returnToLanding"/>
+                        <TextField fx:id="custPhoneField"
+                                   layoutX="300"
+                                   layoutY="150"
+                                   promptText="Phone"/>
+
+                        <Button text="Delete Customer"
+                                layoutX="300"
+                                layoutY="220"
+                                onAction="#deleteCustomer"/>
+
+                        <Button text="Refresh"
+                                layoutX="450"
+                                layoutY="220"
+                                onAction="#refreshCustomers"/>
+
+                    </AnchorPane>
+                </Tab>
+
+                <!-- ===================== -->
+                <!-- DRIVER TAB (NEW) -->
+                <!-- ===================== -->
+                <Tab text="Drivers">
+                    <AnchorPane>
+
+                        <ListView fx:id="driverListView"
+                                  layoutX="20"
+                                  layoutY="20"
+                                  prefHeight="350"
+                                  prefWidth="250"/>
+
+                        <TextField fx:id="driverUserNameField"
+                                   layoutX="300"
+                                   layoutY="30"
+                                   promptText="Username"/>
+
+                        <TextField fx:id="driverNameField"
+                                   layoutX="300"
+                                   layoutY="70"
+                                   promptText="Name"/>
+
+                        <TextField fx:id="driverEmailField"
+                                   layoutX="300"
+                                   layoutY="110"
+                                   promptText="Email"/>
+
+                        <TextField fx:id="driverPhoneField"
+                                   layoutX="300"
+                                   layoutY="150"
+                                   promptText="Phone"/>
+
+                        <Button text="Delete Driver"
+                                layoutX="300"
+                                layoutY="220"
+                                onAction="#deleteDriver"/>
+
+                        <Button text="Refresh"
+                                layoutX="450"
+                                layoutY="220"
+                                onAction="#refreshDrivers"/>
+
+                    </AnchorPane>
+                </Tab>
+
+            </tabs>
+
+        </TabPane>
 
     </children>
 </AnchorPane>

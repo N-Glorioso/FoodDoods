@@ -24,7 +24,7 @@
                            <content>
                               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="496.0" prefWidth="556.0">
                                  <children>
-                                    <ListView prefHeight="400.0" prefWidth="557.0" />
+                                    <ListView fx:id="availableOrderList" prefHeight="400.0" prefWidth="557.0" />
                                  </children>
                               </AnchorPane>
                            </content>
@@ -39,17 +39,9 @@
                      <children>
                         <Button layoutX="29.0" layoutY="311.0" mnemonicParsing="false" text="Mark Available" />
                         <Button layoutX="456.0" layoutY="311.0" mnemonicParsing="false" text="Mark Unavailable" />
-                        <ScrollPane layoutX="15.0" layoutY="14.0" prefHeight="264.0" prefWidth="571.0">
-                           <content>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="451.0" prefWidth="556.0">
-                                 <children>
-                                    <ListView prefHeight="389.0" prefWidth="559.0" />
-                                 </children>
-                              </AnchorPane>
-                           </content>
-                        </ScrollPane>
-                        <Button layoutX="173.0" layoutY="311.0" mnemonicParsing="false" text="Create New Item" />
-                        <Button layoutX="332.0" layoutY="311.0" mnemonicParsing="false" text="Delete Item" />
+                        <Button layoutX="178.0" layoutY="311.0" onAction="#showAddMenuItemDialog" text="Add Menu Item" />
+                        <Button layoutX="332.0" layoutY="311.0" mnemonicParsing="false" onAction="#deleteSelectedMenuItem" text="Delete Item" />
+                        <ListView fx:id="menuListView" layoutX="15.0" layoutY="15.0" prefHeight="262.0" prefWidth="571.0" />
                      </children>
                   </AnchorPane>
                </content>

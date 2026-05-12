@@ -16,14 +16,28 @@ public class AdminController {
 
     private Connection conn;
 
+    // =========================
+    // ROOT
+    // =========================
     @FXML private AnchorPane anchorPane;
 
+    // =========================
+    // CUSTOMER UI
+    // =========================
     @FXML private ListView<String> customerListView;
+    @FXML private TextField custUserNameField;
+    @FXML private TextField custNameField;
+    @FXML private TextField custEmailField;
+    @FXML private TextField custPhoneField;
 
-    @FXML private TextField userNameField;
-    @FXML private TextField nameField;
-    @FXML private TextField emailField;
-    @FXML private TextField phoneField;
+    // =========================
+    // DRIVER UI
+    // =========================
+    @FXML private ListView<String> driverListView;
+    @FXML private TextField driverUserNameField;
+    @FXML private TextField driverNameField;
+    @FXML private TextField driverEmailField;
+    @FXML private TextField driverPhoneField;
 
     // =========================
     // INIT
@@ -33,13 +47,14 @@ public class AdminController {
         try {
             conn = State.getConn();
             populateCustomerList();
+            populateDriverList();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     // =========================
-    // POPULATE LISTVIEW
+    // POPULATE CUSTOMERS
     // =========================
     private void populateCustomerList() {
         try {
@@ -61,47 +76,88 @@ public class AdminController {
     }
 
     // =========================
-    // DELETE CUSTOMER
+    // POPULATE DRIVERS
+    // =========================
+    private void populateDriverList() {
+        try {
+            driverListView.getItems().clear();
+
+            PreparedStatement ps = conn.prepareStatement(
+                    "SELECT D_Username FROM Driver"
+            );
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                driverListView.getItems().add(rs.getString("D_Username"));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // =========================
+    // DELETE CUSTOMER (SAFE)
     // =========================
     @FXML
     private void deleteCustomer() {
         try {
             String username = customerListView.getSelectionModel().getSelectedItem();
+            if (username == null) return;
 
-            if (username == null) {
-                System.out.println("No customer selected");
-                return;
-            }
-
-            // 1. Order Items
-            PreparedStatement deleteOrderItems = conn.prepareStatement(
-                    "DELETE FROM Order_Item " +
-                            "WHERE OI_Order_ID IN (" +
-                            "SELECT Order_ID FROM Orders " +
-                            "WHERE O_Customer_ID = (SELECT C_ID FROM Customer WHERE C_Username = ?)" +
-                            ")"
+            PreparedStatement delItems = conn.prepareStatement(
+                    "DELETE FROM Order_Item WHERE OI_Order_ID IN (" +
+                            "SELECT Order_ID FROM Orders WHERE O_Customer_ID = " +
+                            "(SELECT C_ID FROM Customer WHERE C_Username = ?))"
             );
-            deleteOrderItems.setString(1, username);
-            deleteOrderItems.executeUpdate();
+            delItems.setString(1, username);
+            delItems.executeUpdate();
 
-            // 2. Orders
-            PreparedStatement deleteOrders = conn.prepareStatement(
+            PreparedStatement delOrders = conn.prepareStatement(
                     "DELETE FROM Orders WHERE O_Customer_ID = " +
                             "(SELECT C_ID FROM Customer WHERE C_Username = ?)"
             );
-            deleteOrders.setString(1, username);
-            deleteOrders.executeUpdate();
+            delOrders.setString(1, username);
+            delOrders.executeUpdate();
 
-            // 3. Customer
-            PreparedStatement deleteCustomer = conn.prepareStatement(
+            PreparedStatement delCustomer = conn.prepareStatement(
                     "DELETE FROM Customer WHERE C_Username = ?"
             );
-            deleteCustomer.setString(1, username);
-            deleteCustomer.executeUpdate();
+            delCustomer.setString(1, username);
+            delCustomer.executeUpdate();
 
             populateCustomerList();
 
-            System.out.println("Deleted: " + username);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // =========================
+    // DELETE DRIVER (SIMPLER)
+    // =========================
+    @FXML
+    private void deleteDriver() {
+        try {
+            String username = driverListView.getSelectionModel().getSelectedItem();
+            if (username == null) return;
+
+            // clear any assigned orders first
+            PreparedStatement clearOrders = conn.prepareStatement(
+                    "UPDATE Driver SET D_Order_ID = NULL WHERE D_Username = ?"
+            );
+            clearOrders.setString(1, username);
+            clearOrders.executeUpdate();
+
+            // delete driver
+            PreparedStatement delDriver = conn.prepareStatement(
+                    "DELETE FROM Driver WHERE D_Username = ?"
+            );
+            delDriver.setString(1, username);
+            delDriver.executeUpdate();
+
+            populateDriverList();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -114,6 +170,11 @@ public class AdminController {
     @FXML
     private void refreshCustomers() {
         populateCustomerList();
+    }
+
+    @FXML
+    private void refreshDrivers() {
+        populateDriverList();
     }
 
     // =========================

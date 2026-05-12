@@ -43,6 +43,8 @@ public class RestaurantOwnerController {
     private TextField menuItemPriceField;
     @FXML
     private ListView<String> availableOrderList;
+    @FXML
+    private ListView<String> menuListView;
 
     @FXML
     private void initialize() {
@@ -71,6 +73,38 @@ public class RestaurantOwnerController {
             }
 
             populateAvailableOrderList();
+            populateMenuList();
+        } catch (Exception e) {
+            showError(e.getMessage());
+        }
+    }
+
+    @FXML
+    private void populateMenuList() {
+        if (menuListView == null) return;
+
+        menuListView.getItems().clear();
+
+        try {
+            Connection conn = State.getConn();
+            PreparedStatement ps = conn.prepareStatement(
+                    "SELECT MenuItem_ID, MenuItemName, Price, Availability " +
+                            "FROM Menu_Item " +
+                            "WHERE MI_Restaurant_ID = ?"
+            );
+
+            ps.setString(1, getRestaurantID());
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                menuListView.getItems().add(
+                        rs.getString("MenuItem_ID") + " | " +
+                                rs.getString("MenuItemName") + " | $" +
+                                rs.getString("Price") + " | " +
+                                (rs.getInt("Availability") == 1 ? "Available" : "Unavailable")
+                );
+            }
+
         } catch (Exception e) {
             showError(e.getMessage());
         }
@@ -238,11 +272,78 @@ public class RestaurantOwnerController {
     }
 
     @FXML
-    private void deleteItem() {
+    private void showAddMenuItemDialog() {
         try {
-            String menuItemID = menuItemIDField.getText();
+            javafx.scene.control.TextInputDialog nameDialog =
+                    new javafx.scene.control.TextInputDialog();
+            nameDialog.setTitle("Add Menu Item");
+            nameDialog.setHeaderText("Enter Menu Item Name");
+            nameDialog.setContentText("Name:");
+
+            java.util.Optional<String> nameResult = nameDialog.showAndWait();
+            if (nameResult.isEmpty()) return;
+
+            String itemName = nameResult.get();
+
+            javafx.scene.control.TextInputDialog priceDialog =
+                    new javafx.scene.control.TextInputDialog();
+            priceDialog.setTitle("Add Menu Item");
+            priceDialog.setHeaderText("Enter Price");
+            priceDialog.setContentText("Price:");
+
+            java.util.Optional<String> priceResult = priceDialog.showAndWait();
+            if (priceResult.isEmpty()) return;
+
+            String itemPrice = priceResult.get();
+
+            if (itemPrice.contains("-")) {
+                Alert negativeAlert = new Alert(Alert.AlertType.ERROR);
+                negativeAlert.setContentText("Negative prices not allowed");
+                negativeAlert.show();
+                return;
+            }
+
+            int menuItemID = generateID();
 
             Connection conn = State.getConn();
+            PreparedStatement statement = conn.prepareStatement(
+                    "INSERT INTO Menu_Item (MenuItem_ID, MI_Restaurant_ID, MenuItemName, Price, Availability) " +
+                            "VALUES (?, ?, ?, ?, 1)"
+            );
+
+            statement.setInt(1, menuItemID);
+            statement.setString(2, getRestaurantID());
+            statement.setString(3, itemName);
+            statement.setString(4, itemPrice);
+
+            int rows = statement.executeUpdate();
+
+            if (rows > 0) {
+                showInfo("Menu item added successfully");
+            } else {
+                showError("Failed to add menu item");
+            }
+
+        } catch (Exception e) {
+            showError(e.getMessage());
+        }
+    }
+
+    @FXML
+    private void deleteSelectedMenuItem() {
+        try {
+            if (menuListView == null || menuListView.getSelectionModel().getSelectedItem() == null) {
+                showError("Please select a menu item to delete");
+                return;
+            }
+
+            String selected = menuListView.getSelectionModel().getSelectedItem();
+
+            // format: ID | name | price | availability
+            String menuItemID = selected.split(" \\| ")[0];
+
+            Connection conn = State.getConn();
+
             PreparedStatement statement = conn.prepareStatement(
                     "DELETE FROM Menu_Item " +
                             "WHERE MenuItem_ID = ? " +
@@ -252,13 +353,15 @@ public class RestaurantOwnerController {
             statement.setString(1, menuItemID);
             statement.setString(2, getRestaurantID());
 
-            int rowsChanged = statement.executeUpdate();
+            int rows = statement.executeUpdate();
 
-            if (rowsChanged > 0) {
+            if (rows > 0) {
                 showInfo("Menu item deleted");
+                populateMenuList(); // refresh UI
             } else {
-                showError("No menu item found with that ID");
+                showError("Could not delete menu item");
             }
+
         } catch (Exception e) {
             showError(e.getMessage());
         }
