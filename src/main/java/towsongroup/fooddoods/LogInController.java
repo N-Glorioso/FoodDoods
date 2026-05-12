@@ -25,7 +25,7 @@ public class LogInController {
     TextField passWordField;
 
     @FXML void initialize() {
-        roleComboBox.getItems().addAll("Customer", "Driver", "Restaurant Employee", "Restaurant Owner");
+        roleComboBox.getItems().addAll("Customer", "Driver", "Restaurant Employee", "Restaurant Owner", "Admin");
     }
 
     @FXML
@@ -113,6 +113,24 @@ public class LogInController {
                 State.eMailAddress = rs.getString("Email");
 
                 loader = new FXMLLoader(App.class.getResource("restaurantOwnerScene.fxml"));
+            }else if (selection.equals("Admin")) {
+                PreparedStatement ps = conn.prepareStatement(
+                        "SELECT * FROM Administrator " +
+                                "WHERE A_Username = ? AND A_Password = ?;"
+                );
+
+                ps.setString(1, userNameField.getText());
+                ps.setString(2, passWordField.getText());
+
+                ResultSet rs = ps.executeQuery();
+                rs.next();
+
+                State.userName = rs.getString("A_Username");
+                State.passWord = rs.getString("A_Password");
+                State.eMailAddress = rs.getString("A_Email");
+                State.phoneNumber = rs.getString("A_PhoneNum");
+
+                loader = new FXMLLoader(App.class.getResource("adminScene.fxml"));
             } else {
                 Alert chooseAnOption = new Alert(Alert.AlertType.WARNING, "Please select a role");
                 chooseAnOption.show();

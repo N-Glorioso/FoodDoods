@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="towsongroup.fooddoods.AdminController">
+
+    <children>
+
+        <!-- CUSTOMER LIST -->
+        <ListView fx:id="customerListView"
+                  layoutX="20"
+                  layoutY="20"
+                  prefHeight="300"
+                  prefWidth="250"/>
+
+        <!-- DETAIL FIELDS (optional admin view) -->
+        <TextField fx:id="userNameField"
+                   layoutX="300"
+                   layoutY="30"
+                   promptText="Username"/>
+
+        <TextField fx:id="nameField"
+                   layoutX="300"
+                   layoutY="70"
+                   promptText="Name"/>
+
+        <TextField fx:id="emailField"
+                   layoutX="300"
+                   layoutY="110"
+                   promptText="Email"/>
+
+        <TextField fx:id="phoneField"
+                   layoutX="300"
+                   layoutY="150"
+                   promptText="Phone"/>
+
+        <!-- BUTTONS -->
+        <Button text="Delete Customer"
+                layoutX="300"
+                layoutY="220"
+                onAction="#deleteCustomer"/>
+
+        <Button text="Refresh"
+                layoutX="450"
+                layoutY="220"
+                onAction="#refreshCustomers"/>
+
+        <Button text="Back"
+                layoutX="300"
+                layoutY="270"
+                onAction="#returnToLanding"/>
+
+    </children>
+</AnchorPane>

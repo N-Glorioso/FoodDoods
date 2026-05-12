@@ -33,7 +33,6 @@ public class RestaurantOwnerController {
     @FXML
     private TextField restaurantAddressField;
 
-    // These fx:id names need to match your restaurantOwnerScene.fxml file.
     @FXML
     private TextField orderIDField;
     @FXML
