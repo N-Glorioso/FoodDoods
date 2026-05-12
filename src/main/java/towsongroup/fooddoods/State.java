@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 
 public class State {
     // Database information
-    private static final String url = "jdbc:mysql://localhost:3306/FoodDoodsDemo";
+    private static final String url = "jdbc:mysql://localhost:3306/DeliveryDatabase";
     private static final String user = "root";
     private static final String password = "password";
 
@@ -34,5 +34,18 @@ public class State {
     public static Connection getConn() throws Exception {
         Class.forName("com.mysql.cj.jdbc.Driver");  // Load MySQL driver
         return DriverManager.getConnection(url, user, password);
+    }
+
+    public static void reset() {
+        userName = null;
+        passWord = null;
+        name = null;
+        phoneNumber = null;
+        eMailAddress = null;
+        homeAddress = null;
+        payment = null;
+        vehicleNumber = null;
+        restaurantName = null;
+        restaurantAddress = null;
     }
 }
