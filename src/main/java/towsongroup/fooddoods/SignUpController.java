@@ -19,13 +19,12 @@ public class SignUpController {
 
     @FXML void initialize() {
         roleComboBox.getItems().addAll("Customer", "Driver", "Restaurant Employee", "Restaurant Owner");
-
     }
 
     @FXML
     protected void showRelevantSignUpScene() {
         String selection = roleComboBox.getValue();
-        FXMLLoader loader = new FXMLLoader();
+        FXMLLoader loader;
 
         if (selection == null) {
             Alert chooseAnOption = new Alert(Alert.AlertType.WARNING, "Please select a role");
