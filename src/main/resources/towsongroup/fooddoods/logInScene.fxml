@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 
 <AnchorPane fx:id="anchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="towsongroup.fooddoods.LogInController">
    <children>
-      <TextField layoutX="227.0" layoutY="102.0" />
-      <TextField layoutX="227.0" layoutY="160.0" />
+      <TextField fx:id="userNameField" layoutX="227.0" layoutY="102.0" />
+      <TextField fx:id="passWordField" layoutX="227.0" layoutY="160.0" />
       <Button fx:id="logInButton" layoutX="275.0" layoutY="212.0" mnemonicParsing="false" onAction="#attemptLogIn" text="Log In" />
       <Button fx:id="signUpButton" layoutX="275.0" layoutY="263.0" mnemonicParsing="false" onAction="#returnToLanding" text="Cancel" />
       <Label layoutX="227.0" layoutY="84.0" text="Username" />
       <Label layoutX="227.0" layoutY="142.0" text="Password" />
+      <ComboBox fx:id="roleComboBox" layoutX="225.0" layoutY="40.0" prefWidth="150.0" promptText="Select a role" />
    </children>
 </AnchorPane>
