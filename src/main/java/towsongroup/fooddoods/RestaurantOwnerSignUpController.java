@@ -50,19 +50,6 @@ public class RestaurantOwnerSignUpController {
             String restaurantName = restaurantNameField.getText();
             String restaurantAddress = restaurantAddressField.getText();
 
-            // Generate ID and check availability
-            int randID = (int) (Math.random() * 1000000);
-            PreparedStatement getIDs = conn.prepareStatement("SELECT Worker_ID FROM Restaurant_Worker");
-            ResultSet ids = getIDs.executeQuery();
-            outerloop: while (true) {
-                randID = (int) (Math.random() * 1000000);
-                while (ids.next()) {
-                    if (randID == ids.getInt(1)) {
-                        continue outerloop;
-                    }
-                }
-                break;
-            }
             // Generate Owner ID and check availability
             int ownerID = (int) (Math.random() * 1000000);
             ArrayList<Integer> usedIDs = State.getIDs();

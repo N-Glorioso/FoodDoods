@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class CustomerSignUpController {
 
@@ -51,16 +52,14 @@ public class CustomerSignUpController {
 
             // Generate ID and check availability
             int randID = (int) (Math.random() * 1000000);
-            PreparedStatement getIDs = conn.prepareStatement("SELECT C_ID FROM Customer");
-            ResultSet ids = getIDs.executeQuery();
-            outerloop: while (true) {
-                randID = (int) (Math.random() * 1000000);
-                while (ids.next()) {
-                    if (randID == ids.getInt(1)) {
-                        continue outerloop;
-                    }
+            ArrayList<Integer> usedIDs = State.getIDs();
+
+            while (true) {
+                if (usedIDs.contains(randID)) {
+                    randID = (int) (Math.random() * 1000000);
+                } else {
+                    break;
                 }
-                break;
             }
             ps.setString(1, Integer.toString(randID));
             ps.setString(2, name);
