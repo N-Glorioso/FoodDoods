@@ -29,7 +29,6 @@ public class State {
     // for restaurant owners
     public static String restaurantAddress;
 
-
     // Database Connection
     public static Connection getConn() throws Exception {
         Class.forName("com.mysql.cj.jdbc.Driver");  // Load MySQL driver
