@@ -1,7 +1,7 @@
 package towsongroup.fooddoods;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.*;
+import java.util.ArrayList;
 
 public class State {
     // Database information
@@ -33,6 +33,54 @@ public class State {
     public static Connection getConn() throws Exception {
         Class.forName("com.mysql.cj.jdbc.Driver");  // Load MySQL driver
         return DriverManager.getConnection(url, user, password);
+    }
+
+    // Get all used IDs
+    public static ArrayList<Integer> getIDs() {
+        ArrayList<Integer> usedIDs = new ArrayList<>();
+
+        try {
+            Connection conn = getConn();
+
+            PreparedStatement getIDs = conn.prepareStatement("SELECT Owner_ID FROM Restaurant_Owner");
+            ResultSet ids = getIDs.executeQuery();
+
+            while (ids.next()) {
+                usedIDs.add(ids.getInt(1));
+            }
+
+            getIDs = conn.prepareStatement("SELECT C_ID FROM Customer");
+            ids = getIDs.executeQuery();
+
+            while (ids.next()) {
+                usedIDs.add(ids.getInt(1));
+            }
+
+            getIDs = conn.prepareStatement("SELECT Driver_ID FROM Driver");
+            ids = getIDs.executeQuery();
+
+            while (ids.next()) {
+                usedIDs.add(ids.getInt(1));
+            }
+
+            getIDs = conn.prepareStatement("SELECT Worker_ID FROM Restaurant_Worker");
+            ids = getIDs.executeQuery();
+
+            while (ids.next()) {
+                usedIDs.add(ids.getInt(1));
+            }
+
+            getIDs = conn.prepareStatement("SELECT Restaurant_ID FROM Restaurant");
+            ids = getIDs.executeQuery();
+
+            while (ids.next()) {
+                usedIDs.add(ids.getInt(1));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return usedIDs;
     }
 
     public static void reset() {
