@@ -2,11 +2,14 @@ package towsongroup.fooddoods;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 
 public class DriverSignUpController {
 
@@ -27,12 +30,44 @@ public class DriverSignUpController {
 
     @FXML
     private void attemptSignUp() {
-        String userName = userNameField.getText();
-        String passWord = passWordField.getText();
-        String name = nameField.getText();
-        String phoneNumber = phoneNumberField.getText();
-        String eMailAddress = eMailAddressField.getText();
-        String vehicleInfo = vehicleField.getText();
+        try {
+            Connection conn = State.getConn();
+
+            PreparedStatement ps = conn.prepareStatement("INSERT INTO Driver (Driver_ID, D_Name, Vehicle_Info, Phone_Num, D_Email, D_Username, D_Password)\n" +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?);");
+
+            String userName = userNameField.getText();
+            String passWord = passWordField.getText();
+            String name = nameField.getText();
+            String phoneNumber = phoneNumberField.getText();
+            String eMailAddress = eMailAddressField.getText();
+            String vehicleInfo = vehicleField.getText();
+
+            ps.setString(1, "0");
+            ps.setString(2, name);
+            State.name = name;
+            ps.setString(3, vehicleInfo);
+            State.vehicleNumber = vehicleInfo;
+            ps.setString(4, phoneNumber);
+            State.phoneNumber = phoneNumber;
+            ps.setString(5, eMailAddress);
+            State.eMailAddress = eMailAddress;
+            ps.setString(6, userName);
+            State.userName = userName;
+            ps.setString(7, passWord);
+            State.passWord = passWord;
+
+            ps.executeUpdate();
+
+            Alert successsAlert = new Alert(Alert.AlertType.INFORMATION);
+            successsAlert.setContentText("Account creation successful");
+            successsAlert.show();
+        } catch (Exception e) {
+            Alert exceptionAlert = new Alert(Alert.AlertType.ERROR);
+            exceptionAlert.setContentText(e.getMessage());
+            exceptionAlert.show();
+            return;
+        }
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("driverScene.fxml"));
         try {
