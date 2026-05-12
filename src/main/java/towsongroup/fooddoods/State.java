@@ -10,6 +10,7 @@ public class State {
     private static final String password = "password";
 
     // Basic account details
+    public static Integer id;
     public static String userName;
     public static String passWord;
     public static String name;
@@ -84,6 +85,7 @@ public class State {
     }
 
     public static void reset() {
+        id = null;
         userName = null;
         passWord = null;
         name = null;

@@ -2,16 +2,22 @@ package towsongroup.fooddoods;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 
 public class CustomerController {
 
+    private Connection conn;
     @FXML
     private AnchorPane anchorPane;
     @FXML
@@ -28,50 +34,103 @@ public class CustomerController {
     private TextField addressField;
     @FXML
     private TextField paymentField;
+    @FXML
+    private ListView<String> restaurantListView;
+    @FXML
+    private ListView<String> menuListView;
+    @FXML
+    private ListView<String> orderListView;
+    @FXML
+    private ListView<String> ordersListView;
 
     @FXML
     private void initialize() {
-        // Populate restaurant list
+        try {
+            conn = State.getConn();
+            PreparedStatement ps = conn.prepareStatement("SELECT RestaurantName FROM Restaurant");
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                restaurantListView.getItems().add(rs.getString(1));
+            }
+
+            restaurantListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue != null) {
+                    populateMenu();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    @FXML
-    private void selectRestaurant(){
-
-    }
-
-    @FXML
     private void populateMenu() {
-        // Get menuItems
+        try {
+            menuListView.getItems().clear();
 
-        // populate the scrollbox
-    }
+            PreparedStatement getRestID = conn.prepareStatement("SELECT Restaurant_ID FROM Restaurant WHERE RestaurantName = ?");
+            getRestID.setString(1, restaurantListView.getSelectionModel().getSelectedItem());
+            ResultSet restIDResult = getRestID.executeQuery();
+            restIDResult.next();
+            String restID = restIDResult.getString(1);
 
-    private void getMenuItems() {
-        // Get the menu items, decide what to return them as
+            PreparedStatement ps = conn.prepareStatement("SELECT MenuItemName, Price, Availability FROM Menu_Item WHERE MI_Restaurant_ID = ?");
+            ps.setString(1, restID);
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()) {
+                menuListView.getItems().add(rs.getString(1) + " | $" + rs.getString(2) + " | " + rs.getString(3));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void addToOrder() {
+        try {
+            PreparedStatement ps = conn.prepareStatement("INSERT INTO Order_Item (OrderItem_ID, Quantity, Price)\n" +
+                    "VALUES (?, ?, ?);");
 
+            PreparedStatement getMenuItemID = conn.prepareStatement("SELECT MenuItem_ID FROM Menu_Item WHERE MenuItemName = ?");
+            getMenuItemID.setString(1, menuListView.getSelectionModel().getSelectedItem());
+            ResultSet menuItemIDResult = getMenuItemID.executeQuery();
+            menuItemIDResult.next();
+            String menuItemID = menuItemIDResult.getString(1);
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void removeFromOrder() {
-
+        try {
+            PreparedStatement ps = conn.prepareStatement("DELETE FROM Order_Item WHERE OrderItem_ID = ?");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void placeOrder(){
-
+        try {
+            PreparedStatement ps = conn.prepareStatement("INSERT INTO ‘Order’ (Order_ID, O_Restaurant_ID, O_Customer_ID, Status)\n" +
+                    "VALUES (?, ?, ?, 'Preparing')");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void populateOrderList() {
-
-    }
-
-    private void getOrders() {
-
+        try {
+            PreparedStatement ps = conn.prepareStatement("SELECT * FROM Order WHERE C_ID = ?");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -94,6 +153,7 @@ public class CustomerController {
             Pane pane = loader.load();
             anchorPane.getChildren().clear();
             anchorPane.getChildren().add(pane);
+            State.reset();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -101,6 +161,10 @@ public class CustomerController {
 
     @FXML
     private void deleteAccount() {
-
+        try {
+            PreparedStatement ps = conn.prepareStatement("DELETE FROM Customer WHERE C_Username=?;");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
