@@ -4,7 +4,6 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
@@ -18,13 +17,9 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <ScrollPane layoutX="14.0" layoutY="14.0" prefHeight="279.0" prefWidth="572.0">
-                           <content>
-                              <ListView prefHeight="467.0" prefWidth="556.0" />
-                           </content>
-                        </ScrollPane>
-                        <Button layoutX="489.0" layoutY="318.0" mnemonicParsing="false" text="Accept Order" />
-                        <Button layoutX="373.0" layoutY="318.0" mnemonicParsing="false" text="Reject Order" />
+                        <Button layoutX="489.0" layoutY="318.0" mnemonicParsing="false" onAction="#acceptOrder" text="Accept Order" />
+                        <Button layoutX="373.0" layoutY="318.0" mnemonicParsing="false" onAction="#rejectOrder" text="Reject Order" />
+                        <ListView fx:id="availableOrdersListView" layoutX="14.0" layoutY="14.0" prefHeight="280.0" prefWidth="571.0" />
                      </children></AnchorPane>
             </content>
           </Tab>
@@ -32,8 +27,9 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <Button layoutX="14.0" layoutY="332.0" mnemonicParsing="false" text="Mark Order as Picked Up" />
-                        <Button layoutX="426.0" layoutY="332.0" mnemonicParsing="false" text="Mark Order as Dropped Off" />
+                        <Button layoutX="14.0" layoutY="332.0" mnemonicParsing="false" onAction="#markAsPickedUp" text="Mark Order as Picked Up" />
+                        <Button layoutX="426.0" layoutY="332.0" mnemonicParsing="false" onAction="#markAsDroppedOff" text="Mark Order as Dropped Off" />
+                        <ListView fx:id="currentOrderListView" layoutX="14.0" layoutY="14.0" prefHeight="280.0" prefWidth="571.0" />
                      </children></AnchorPane>
             </content>
           </Tab>

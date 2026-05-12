@@ -81,7 +81,7 @@ public class LogInController {
                 loader = new FXMLLoader(App.class.getResource("customerScene.fxml"));
             }else if (selection.equals("Restaurant Employee")) {
                 PreparedStatement ps = conn.prepareStatement("SELECT * FROM Restaurant_Worker " +
-                        "WHERE C_Username = ? AND C_Password = ?;");
+                        "WHERE RW_Username = ? AND RW_Password = ?;");
 
                 ps.setString(1, userNameField.getText());
                 ps.setString(2, passWordField.getText());
@@ -95,7 +95,7 @@ public class LogInController {
                 State.phoneNumber = rs.getString("RW_PhoneNum");
                 State.eMailAddress = rs.getString("Email");
 
-                loader = new FXMLLoader(App.class.getResource("customerScene.fxml"));
+                loader = new FXMLLoader(App.class.getResource("restaurantEmployeeScene.fxml"));
             }else if (selection.equals("Restaurant Owner")) {
                 PreparedStatement ps = conn.prepareStatement("SELECT * FROM Restaurant_Owner " +
                         "WHERE C_Username = ? AND C_Password = ?;");
@@ -112,7 +112,7 @@ public class LogInController {
                 State.phoneNumber = rs.getString("RO_PhoneNum");
                 State.eMailAddress = rs.getString("Email");
 
-                loader = new FXMLLoader(App.class.getResource("customerScene.fxml"));
+                loader = new FXMLLoader(App.class.getResource("restaurantOwnerScene.fxml"));
             } else {
                 Alert chooseAnOption = new Alert(Alert.AlertType.WARNING, "Please select a role");
                 chooseAnOption.show();

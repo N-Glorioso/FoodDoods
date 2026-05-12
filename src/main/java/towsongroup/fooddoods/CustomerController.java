@@ -42,6 +42,7 @@ public class CustomerController {
     private ListView<String> orderListView;
     @FXML
     private ListView<String> ordersListView;
+    private int orderID;
 
     @FXML
     private void initialize() {
@@ -59,6 +60,20 @@ public class CustomerController {
                     populateMenu();
                 }
             });
+
+            populateOrdersList();
+
+            // Generate ID and check availability
+            orderID = (int) (Math.random() * 1000000);
+            ArrayList<Integer> usedIDs = State.getIDs();
+
+            while (true) {
+                if (usedIDs.contains(orderID)) {
+                    orderID = (int) (Math.random() * 1000000);
+                } else {
+                    break;
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -91,11 +106,22 @@ public class CustomerController {
     private void addToOrder() {
         try {
             // Insert order item into order item table
-            PreparedStatement ps = conn.prepareStatement("INSERT INTO Order_Item (OrderItem_ID, Quantity, Price)\n" +
-                    "VALUES (?, ?, ?);");
+            PreparedStatement ps = conn.prepareStatement("INSERT INTO Order_Item (OrderItem_ID, OI_Order_ID, OI_MenuItem_ID, Quantity, Price)\n" +
+                    "VALUES (?, ?, ?, ?, ?);");
 
-            PreparedStatement getMenuItemID = conn.prepareStatement("SELECT MenuItem_ID FROM Menu_Item WHERE MenuItemName = ?");
-            getMenuItemID.setString(1, menuListView.getSelectionModel().getSelectedItem());
+            String selectedItem = menuListView.getSelectionModel().getSelectedItem();
+
+            if (selectedItem == null) {
+                return;
+            }
+
+            String menuItemName = selectedItem.split(" \\| ")[0];
+
+            PreparedStatement getMenuItemID = conn.prepareStatement(
+                    "SELECT MenuItem_ID FROM Menu_Item WHERE MenuItemName = ?"
+            );
+
+            getMenuItemID.setString(1, menuItemName);
             ResultSet menuItemIDResult = getMenuItemID.executeQuery();
             menuItemIDResult.next();
             String menuItemID = menuItemIDResult.getString(1);
@@ -113,32 +139,41 @@ public class CustomerController {
             }
 
             ps.setString(1, Integer.toString(orderItemID));
-            ps.setString(2, "1");
+            ps.setString(2, Integer.toString(orderID));
+            ps.setString(3, menuItemID);
+            ps.setString(4, "1");
 
-            PreparedStatement getItemPrice = conn.prepareStatement("SELECT Price FROM Menu_Item WHERE MenuItem_ID = /");
+            PreparedStatement getItemPrice = conn.prepareStatement("SELECT Price FROM Menu_Item WHERE MenuItem_ID = ?");
             getItemPrice.setString(1, menuItemID);
             ResultSet menuItemRS = getItemPrice.executeQuery();
             menuItemRS.next();
             String itemPrice = menuItemRS.getString(1);
 
-            ps.setString(3, itemPrice);
+            ps.setString(5, itemPrice);
 
             ps.executeUpdate();
 
+            populateOrderList();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void removeFromOrder() {
+        try {
+            PreparedStatement ps = conn.prepareStatement("DELETE FROM Order_Item WHERE OrderItem_ID = ?");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void placeOrder(){
+        try {
             // Insert order into order table
-            PreparedStatement addOrder = conn.prepareStatement("INSERT INTO Order (INSERT INTO Order (Order_ID, O_Restaurant_ID, O_Customer_ID, Status)\n" +
-                    "VALUES (?, ?, ?, ?);)");
-
-            // Generate ID and check availability
-            int orderID = (int) (Math.random() * 1000000);
-
-            while (true) {
-                if (usedIDs.contains(orderID)) {
-                    orderID = (int) (Math.random() * 1000000);
-                } else {
-                    break;
-                }
-            }
+            PreparedStatement addOrder = conn.prepareStatement("INSERT INTO Orders (Order_ID, O_Restaurant_ID, O_Customer_ID, Status)\n" +
+                    "VALUES (?, ?, ?, ?)");
 
             addOrder.setString(1, Integer.toString(orderID));
 
@@ -159,34 +194,69 @@ public class CustomerController {
             addOrder.setString(3, custID);
 
             addOrder.setString(4, "Order sent");
+
+            addOrder.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @FXML
-    private void removeFromOrder() {
-        try {
-            PreparedStatement ps = conn.prepareStatement("DELETE FROM Order_Item WHERE OrderItem_ID = ?");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void placeOrder(){
-        try {
-            PreparedStatement ps = conn.prepareStatement("INSERT INTO ‘Order’ (Order_ID, O_Restaurant_ID, O_Customer_ID, Status)\n" +
-                    "VALUES (?, ?, ?, 'Preparing')");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
     private void populateOrderList() {
         try {
-            PreparedStatement ps = conn.prepareStatement("SELECT * FROM Order WHERE C_ID = ?");
+            orderListView.getItems().clear();
+
+            PreparedStatement ps = conn.prepareStatement(
+                    "SELECT Menu_Item.MenuItemName, Order_Item.Quantity, Order_Item.Price " +
+                            "FROM Order_Item " +
+                            "JOIN Menu_Item ON Order_Item.OI_MenuItem_ID = Menu_Item.MenuItem_ID " +
+                            "WHERE Order_Item.OI_Order_ID = ?"
+            );
+
+            ps.setInt(1, orderID);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                String item =
+                        rs.getString("MenuItemName") + " | Qty: " +
+                                rs.getString("Quantity") + " | $" +
+                                rs.getString("Price");
+
+                orderListView.getItems().add(item);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void populateOrdersList() {
+        try {
+            ordersListView.getItems().clear();
+
+            PreparedStatement ps = conn.prepareStatement(
+                    "SELECT Orders.Order_ID, Restaurant.RestaurantName, Customer.Address, Orders.Status " +
+                            "FROM Driver " +
+                            "JOIN Orders ON Driver.D_Order_ID = Orders.Order_ID " +
+                            "JOIN Restaurant ON Orders.O_Restaurant_ID = Restaurant.Restaurant_ID " +
+                            "JOIN Customer ON Orders.O_Customer_ID = Customer.C_ID " +
+                            "WHERE Customer.C_Username = ?"
+            );
+
+            ps.setString(1, State.userName);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                ordersListView.getItems().add(
+                        rs.getString("Order_ID") + " | " +
+                                rs.getString("RestaurantName") + " | " +
+                                rs.getString("Address") + " | " +
+                                rs.getString("Status")
+                );
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }

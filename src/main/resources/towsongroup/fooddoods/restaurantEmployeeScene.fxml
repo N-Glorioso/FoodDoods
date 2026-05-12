@@ -4,7 +4,6 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
@@ -20,15 +19,7 @@
                      <children>
                         <Button layoutX="29.0" layoutY="311.0" mnemonicParsing="false" text="Reject Order" />
                         <Button layoutX="431.0" layoutY="311.0" mnemonicParsing="false" text="Mark Ready for Pickup" />
-                        <ScrollPane layoutX="15.0" layoutY="14.0" prefHeight="264.0" prefWidth="571.0">
-                          <content>
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="496.0" prefWidth="556.0">
-                                 <children>
-                                    <ListView prefHeight="400.0" prefWidth="557.0" />
-                                 </children>
-                              </AnchorPane>
-                          </content>
-                        </ScrollPane>
+                        <ListView fx:id="availableOrderList" layoutX="14.0" layoutY="14.0" prefHeight="264.0" prefWidth="571.0" />
                      </children></AnchorPane>
             </content>
           </Tab>
@@ -38,15 +29,7 @@
                      <children>
                         <Button layoutX="29.0" layoutY="311.0" mnemonicParsing="false" text="Mark Available" />
                         <Button layoutX="456.0" layoutY="311.0" mnemonicParsing="false" text="Mark Unavailable" />
-                        <ScrollPane layoutX="15.0" layoutY="14.0" prefHeight="264.0" prefWidth="571.0">
-                           <content>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="451.0" prefWidth="556.0">
-                                 <children>
-                                    <ListView prefHeight="389.0" prefWidth="559.0" />
-                                 </children>
-                              </AnchorPane>
-                           </content>
-                        </ScrollPane>
+                        <ListView fx:id="menuListView" layoutX="14.0" layoutY="14.0" prefHeight="264.0" prefWidth="572.0" />
                      </children>
                   </AnchorPane>
                </content>
