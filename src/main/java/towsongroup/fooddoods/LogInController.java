@@ -50,6 +50,7 @@ public class LogInController {
                 ResultSet rs = ps.executeQuery();
                 rs.next();
 
+                State.id = rs.getInt("Driver_ID");
                 State.userName = rs.getString("D_Username");
                 State.passWord = rs.getString("D_Password");
                 State.name = rs.getString("D_Name");
@@ -70,6 +71,7 @@ public class LogInController {
                 ResultSet rs = ps.executeQuery();
                 rs.next();
 
+                State.id = rs.getInt("C_ID");
                 State.userName = rs.getString("C_Username");
                 State.passWord = rs.getString("C_Password");
                 State.name = rs.getString("C_Name");
@@ -106,6 +108,7 @@ public class LogInController {
                 ResultSet rs = ps.executeQuery();
                 rs.next();
 
+                State.id = rs.getInt("Owner_ID");
                 State.userName = rs.getString("RO_Username");
                 State.passWord = rs.getString("RO_Password");
                 State.name = rs.getString("OwnerName");
@@ -125,6 +128,7 @@ public class LogInController {
                 ResultSet rs = ps.executeQuery();
                 rs.next();
 
+                State.id = rs.getInt("Admin_ID");
                 State.userName = rs.getString("A_Username");
                 State.passWord = rs.getString("A_Password");
                 State.eMailAddress = rs.getString("A_Email");
@@ -159,6 +163,7 @@ public class LogInController {
             Pane pane = loader.load();
             anchorPane.getChildren().clear();
             anchorPane.getChildren().add(pane);
+            State.reset();
         } catch (IOException e) {
             e.printStackTrace();
         }
