@@ -44,6 +44,8 @@ public class CustomerController {
     private ListView<String> orderListView;
     @FXML
     private ListView<String> ordersListView;
+    @FXML
+    private ListView<String> historyListView;
     private ArrayList<Integer> preOrderItems;
 
     @FXML
@@ -54,6 +56,7 @@ public class CustomerController {
             populateRestaurantList();
 
             populateOrdersList();
+            populateHistoryList();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -107,6 +110,40 @@ public class CustomerController {
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void populateHistoryList() {
+        try {
+            PreparedStatement getTotalOrders = conn.prepareStatement(
+                    "SELECT COUNT(*) AS TotalOrders\n" +
+                            "FROM Orders\n" +
+                            "WHERE O_Customer_ID = ?;"
+            );
+
+            getTotalOrders.setInt(1, State.id);
+            ResultSet totalOrders = getTotalOrders.executeQuery();
+            totalOrders.next();
+
+            historyListView.getItems().add("Total orders made: " + totalOrders.getInt(1));
+
+//            PreparedStatement getTotalSpent = conn.prepareStatement(
+//                    "SELECT SUM(Order_Item.Price * Order_Item.Quantity) AS TotalSpent\n" +
+//                            "FROM Orders\n" +
+//                            "JOIN Order_Item\n" +
+//                            "ON Orders.Order_ID = Order_Item.OI_Order_ID\n" +
+//                            "WHERE Orders.O_Customer_ID = ?;"
+//            );
+//
+//            getTotalSpent.setInt(1, State.id);
+//            ResultSet totalSpent = getTotalSpent.executeQuery();
+//            totalSpent.next();
+//
+//            historyListView.getItems().add("Total money spent: " + totalSpent.getInt(1));
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
@@ -227,6 +264,7 @@ public class CustomerController {
             preOrderItems.clear();
             populateOrderList();
             populateOrdersList();
+            populateHistoryList();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText(e.getMessage());

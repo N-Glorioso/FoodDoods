@@ -85,6 +85,7 @@
                         <TextField fx:id="paymentField" layoutX="14.0" layoutY="329.0" prefHeight="25.0" prefWidth="147.0" />
                         <Button layoutX="479.0" layoutY="329.0" mnemonicParsing="false" onAction="#updateAccount" text="Update Account" />
                         <Button layoutX="365.0" layoutY="329.0" mnemonicParsing="false" onAction="#returnToLanding" prefHeight="25.0" prefWidth="99.0" text="Log Out" />
+                        <ListView fx:id="historyListView" layoutX="363.0" layoutY="243.0" prefHeight="71.0" prefWidth="216.0" />
                      </children>
                   </AnchorPane>
                </content>
