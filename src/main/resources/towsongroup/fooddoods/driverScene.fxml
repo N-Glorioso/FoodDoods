@@ -18,7 +18,6 @@
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
                         <Button layoutX="489.0" layoutY="318.0" mnemonicParsing="false" onAction="#acceptOrder" text="Accept Order" />
-                        <Button layoutX="373.0" layoutY="318.0" mnemonicParsing="false" onAction="#rejectOrder" text="Reject Order" />
                         <ListView fx:id="availableOrdersListView" layoutX="14.0" layoutY="14.0" prefHeight="280.0" prefWidth="571.0" />
                      </children></AnchorPane>
             </content>
