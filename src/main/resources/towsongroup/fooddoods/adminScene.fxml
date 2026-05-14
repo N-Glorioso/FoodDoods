@@ -1,111 +1,107 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
+<AnchorPane fx:id="anchorPane" prefHeight="600.0" prefWidth="800.0"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="towsongroup.fooddoods.AdminController">
 
     <children>
+        <TabPane layoutX="0.0" layoutY="0.0" prefHeight="600.0" prefWidth="800.0" tabClosingPolicy="UNAVAILABLE">
 
-        <TabPane layoutX="10" layoutY="10" prefHeight="500" prefWidth="700">
-
-            <!-- ===================== -->
-            <!-- CUSTOMER TAB -->
-            <!-- ===================== -->
             <tabs>
 
                 <Tab text="Customers">
-                    <AnchorPane>
-
-                        <ListView fx:id="customerListView"
-                                  layoutX="20"
-                                  layoutY="20"
-                                  prefHeight="350"
-                                  prefWidth="250"/>
-
-                        <TextField fx:id="custUserNameField"
-                                   layoutX="300"
-                                   layoutY="30"
-                                   promptText="Username"/>
-
-                        <TextField fx:id="custNameField"
-                                   layoutX="300"
-                                   layoutY="70"
-                                   promptText="Name"/>
-
-                        <TextField fx:id="custEmailField"
-                                   layoutX="300"
-                                   layoutY="110"
-                                   promptText="Email"/>
-
-                        <TextField fx:id="custPhoneField"
-                                   layoutX="300"
-                                   layoutY="150"
-                                   promptText="Phone"/>
-
-                        <Button text="Delete Customer"
-                                layoutX="300"
-                                layoutY="220"
-                                onAction="#deleteCustomer"/>
-
-                        <Button text="Refresh"
-                                layoutX="450"
-                                layoutY="220"
-                                onAction="#refreshCustomers"/>
-
-                    </AnchorPane>
+                    <content>
+                        <AnchorPane prefHeight="570.0" prefWidth="800.0">
+                            <children>
+                                <Label layoutX="30.0" layoutY="25.0" text="Customers" />
+                                <ListView fx:id="customerListView" layoutX="30.0" layoutY="55.0" prefHeight="420.0" prefWidth="740.0" />
+                                <Button layoutX="30.0" layoutY="500.0" mnemonicParsing="false" onAction="#populateCustomerList" text="Refresh Customers" />
+                            </children>
+                        </AnchorPane>
+                    </content>
                 </Tab>
 
-                <!-- ===================== -->
-                <!-- DRIVER TAB (NEW) -->
-                <!-- ===================== -->
                 <Tab text="Drivers">
-                    <AnchorPane>
+                    <content>
+                        <AnchorPane prefHeight="570.0" prefWidth="800.0">
+                            <children>
+                                <Label layoutX="30.0" layoutY="25.0" text="Drivers" />
+                                <ListView fx:id="driverListView" layoutX="30.0" layoutY="55.0" prefHeight="420.0" prefWidth="740.0" />
+                                <Button layoutX="30.0" layoutY="500.0" mnemonicParsing="false" onAction="#populateDriverList" text="Refresh Drivers" />
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </Tab>
 
-                        <ListView fx:id="driverListView"
-                                  layoutX="20"
-                                  layoutY="20"
-                                  prefHeight="350"
-                                  prefWidth="250"/>
+                <Tab text="Restaurant Owners">
+                    <content>
+                        <AnchorPane prefHeight="570.0" prefWidth="800.0">
+                            <children>
+                                <Label layoutX="30.0" layoutY="25.0" text="Restaurant Owners" />
+                                <ListView fx:id="restaurantOwnerListView" layoutX="30.0" layoutY="55.0" prefHeight="420.0" prefWidth="740.0" />
+                                <Button layoutX="30.0" layoutY="500.0" mnemonicParsing="false" onAction="#populateRestaurantOwnerList" text="Refresh Owners" />
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </Tab>
 
-                        <TextField fx:id="driverUserNameField"
-                                   layoutX="300"
-                                   layoutY="30"
-                                   promptText="Username"/>
+                <Tab text="Restaurant Employees">
+                    <content>
+                        <AnchorPane prefHeight="570.0" prefWidth="800.0">
+                            <children>
+                                <Label layoutX="30.0" layoutY="25.0" text="Restaurant Employees" />
+                                <ListView fx:id="restaurantEmployeeListView" layoutX="30.0" layoutY="55.0" prefHeight="420.0" prefWidth="740.0" />
+                                <Button layoutX="30.0" layoutY="500.0" mnemonicParsing="false" onAction="#populateRestaurantEmployeeList" text="Refresh Employees" />
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </Tab>
 
-                        <TextField fx:id="driverNameField"
-                                   layoutX="300"
-                                   layoutY="70"
-                                   promptText="Name"/>
+                <Tab text="Orders">
+                    <content>
+                        <AnchorPane prefHeight="570.0" prefWidth="800.0">
+                            <children>
+                                <Label layoutX="30.0" layoutY="25.0" text="Orders" />
+                                <ListView fx:id="orderListView" layoutX="30.0" layoutY="55.0" prefHeight="420.0" prefWidth="740.0" />
+                                <Button layoutX="30.0" layoutY="500.0" mnemonicParsing="false" onAction="#populateOrderList" text="Refresh Orders" />
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </Tab>
 
-                        <TextField fx:id="driverEmailField"
-                                   layoutX="300"
-                                   layoutY="110"
-                                   promptText="Email"/>
+                <Tab text="Admin Account">
+                    <content>
+                        <AnchorPane prefHeight="570.0" prefWidth="800.0">
+                            <children>
+                                <Label layoutX="30.0" layoutY="30.0" text="Username" />
+                                <TextField fx:id="userNameField" layoutX="170.0" layoutY="25.0" prefWidth="250.0" />
 
-                        <TextField fx:id="driverPhoneField"
-                                   layoutX="300"
-                                   layoutY="150"
-                                   promptText="Phone"/>
+                                <Label layoutX="30.0" layoutY="75.0" text="Password" />
+                                <TextField fx:id="passWordField" layoutX="170.0" layoutY="70.0" prefWidth="250.0" />
 
-                        <Button text="Delete Driver"
-                                layoutX="300"
-                                layoutY="220"
-                                onAction="#deleteDriver"/>
+                                <Label layoutX="30.0" layoutY="120.0" text="Phone Number" />
+                                <TextField fx:id="phoneNumberField" layoutX="170.0" layoutY="115.0" prefWidth="250.0" />
 
-                        <Button text="Refresh"
-                                layoutX="450"
-                                layoutY="220"
-                                onAction="#refreshDrivers"/>
+                                <Label layoutX="30.0" layoutY="165.0" text="Email Address" />
+                                <TextField fx:id="eMailAddressField" layoutX="170.0" layoutY="160.0" prefWidth="250.0" />
 
-                    </AnchorPane>
+                                <Button layoutX="170.0" layoutY="220.0" mnemonicParsing="false" onAction="#updateAccount" text="Update Account" />
+                                <Button layoutX="300.0" layoutY="220.0" mnemonicParsing="false" onAction="#returnToLanding" text="Log Out" />
+                            </children>
+                        </AnchorPane>
+                    </content>
                 </Tab>
 
             </tabs>
-
         </TabPane>
-
     </children>
 </AnchorPane>

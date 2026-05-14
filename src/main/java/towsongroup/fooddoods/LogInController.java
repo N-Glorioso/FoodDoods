@@ -152,7 +152,9 @@ public class LogInController {
             anchorPane.getChildren().clear();
             anchorPane.getChildren().add(pane);
         } catch (IOException e) {
-            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 

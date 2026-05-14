@@ -17,8 +17,7 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <Button layoutX="29.0" layoutY="311.0" mnemonicParsing="false" text="Reject Order" />
-                        <Button layoutX="431.0" layoutY="311.0" mnemonicParsing="false" text="Mark Ready for Pickup" />
+                        <Button layoutX="431.0" layoutY="311.0" mnemonicParsing="false" onAction="#markReady" text="Mark Ready for Pickup" />
                         <ListView fx:id="availableOrderList" layoutX="14.0" layoutY="14.0" prefHeight="264.0" prefWidth="571.0" />
                      </children></AnchorPane>
             </content>
@@ -27,8 +26,8 @@
                <content>
                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <Button layoutX="29.0" layoutY="311.0" mnemonicParsing="false" text="Mark Available" />
-                        <Button layoutX="456.0" layoutY="311.0" mnemonicParsing="false" text="Mark Unavailable" />
+                        <Button layoutX="29.0" layoutY="311.0" mnemonicParsing="false" onAction="#markAvailable" text="Mark Available" />
+                        <Button layoutX="456.0" layoutY="311.0" mnemonicParsing="false" onAction="#markUnavailable" text="Mark Unavailable" />
                         <ListView fx:id="menuListView" layoutX="14.0" layoutY="14.0" prefHeight="264.0" prefWidth="572.0" />
                      </children>
                   </AnchorPane>

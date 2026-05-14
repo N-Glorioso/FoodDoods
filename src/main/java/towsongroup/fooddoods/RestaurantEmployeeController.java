@@ -15,6 +15,8 @@ import java.sql.ResultSet;
 
 public class RestaurantEmployeeController {
 
+    private Connection conn;
+
     @FXML
     private AnchorPane anchorPane;
     @FXML
@@ -30,20 +32,27 @@ public class RestaurantEmployeeController {
     @FXML
     private TextField restaurantNameField;
     @FXML
-    private ListView<String> menuListView;
-    @FXML
-    private TextField orderIDField;
-    @FXML
-    private TextField menuItemIDField;
-    @FXML
     private ListView<String> availableOrderList;
+    @FXML
+    private ListView<String> menuListView;
 
     @FXML
     private void initialize() {
         try {
-            Connection conn = State.getConn();
+            conn = State.getConn();
 
-            PreparedStatement statement = conn.prepareStatement(
+            populateAccountFields();
+            populateAvailableOrderList();
+            populateMenuList();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void populateAccountFields() {
+        try {
+            PreparedStatement ps = conn.prepareStatement(
                     "SELECT rw.RW_Name, rw.RW_PhoneNum, rw.Email, rw.RW_Username, rw.RW_Password, " +
                             "r.RestaurantName " +
                             "FROM Restaurant_Worker rw " +
@@ -51,8 +60,9 @@ public class RestaurantEmployeeController {
                             "WHERE rw.RW_Username = ?"
             );
 
-            statement.setString(1, State.userName);
-            ResultSet rs = statement.executeQuery();
+            ps.setString(1, State.userName);
+
+            ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
                 nameField.setText(rs.getString("RW_Name"));
@@ -63,143 +73,149 @@ public class RestaurantEmployeeController {
                 restaurantNameField.setText(rs.getString("RestaurantName"));
             }
 
-            populateMenuList();
-            populateAvailableOrderList();
         } catch (Exception e) {
-            showError(e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
+        }
+    }
+
+    private void populateAvailableOrderList() {
+        try {
+            availableOrderList.getItems().clear();
+
+            PreparedStatement ps = conn.prepareStatement(
+                    "SELECT Order_ID, O_Customer_ID, OrderStatus " +
+                            "FROM Orders " +
+                            "WHERE O_Restaurant_ID = ? " +
+                            "AND OrderStatus = 'Order Placed'"
+            );
+
+            ps.setInt(1, getRestaurantID());
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                availableOrderList.getItems().add(
+                        rs.getString("Order_ID") + " | " +
+                                rs.getString("O_Customer_ID") + " | " +
+                                rs.getString("OrderStatus")
+                );
+            }
+
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
     private void populateMenuList() {
-        if (menuListView == null) {
-            return;
-        }
-
-        menuListView.getItems().clear();
-
         try {
-            Connection conn = State.getConn();
+            menuListView.getItems().clear();
 
-            PreparedStatement statement = conn.prepareStatement(
+            PreparedStatement ps = conn.prepareStatement(
                     "SELECT MenuItem_ID, MenuItemName, Price, Availability " +
                             "FROM Menu_Item " +
                             "WHERE MI_Restaurant_ID = ?"
             );
 
-            statement.setString(1, getRestaurantID());
+            ps.setInt(1, getRestaurantID());
 
-            ResultSet rs = statement.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-
-                String item =
+                menuListView.getItems().add(
                         rs.getString("MenuItem_ID") + " | " +
                                 rs.getString("MenuItemName") + " | $" +
                                 rs.getString("Price") + " | " +
-                                (rs.getInt("Availability") == 1 ? "Available" : "Unavailable");
-
-                menuListView.getItems().add(item);
+                                (rs.getInt("Availability") == 1 ? "Available" : "Unavailable")
+                );
             }
 
         } catch (Exception e) {
-            showError(e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
-    }
-
-    @FXML
-    private void populateAvailableOrderList() {
-        if (availableOrderList == null) {
-            return;
-        }
-
-        availableOrderList.getItems().clear();
-
-        try {
-            ResultSet rs = getAvailableOrders();
-
-            while (rs.next()) {
-                String orderInfo = "Order ID: " + rs.getString("Order_ID") +
-                        " | Customer ID: " + rs.getString("O_Customer_ID") +
-                        " | Status: " + rs.getString("Status");
-
-                availableOrderList.getItems().add(orderInfo);
-            }
-        } catch (Exception e) {
-            showError(e.getMessage());
-        }
-    }
-
-    private ResultSet getAvailableOrders() throws Exception {
-        Connection conn = State.getConn();
-
-        PreparedStatement statement = conn.prepareStatement(
-                "SELECT * " +
-                        "FROM Orders " +
-                        "WHERE O_Restaurant_ID = ? " +
-                        "AND Status = 'Preparing'"
-        );
-
-        statement.setString(1, getRestaurantID());
-        return statement.executeQuery();
     }
 
     @FXML
     private void rejectOrder() {
         try {
-            String orderID = orderIDField.getText();
+            String selectedOrder = availableOrderList.getSelectionModel().getSelectedItem();
 
-            Connection conn = State.getConn();
-            PreparedStatement statement = conn.prepareStatement(
+            if (selectedOrder == null) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("No order selected");
+                alert.show();
+                return;
+            }
+
+            String orderID = selectedOrder.split("\\|")[0].trim();
+
+            PreparedStatement ps = conn.prepareStatement(
                     "UPDATE Orders " +
-                            "SET Status = 'Rejected' " +
+                            "SET OrderStatus = 'Rejected' " +
                             "WHERE Order_ID = ? " +
                             "AND O_Restaurant_ID = ? " +
-                            "AND Status = 'Preparing'"
+                            "AND OrderStatus = 'Order Placed'"
             );
 
-            statement.setString(1, orderID);
-            statement.setString(2, getRestaurantID());
+            ps.setString(1, orderID);
+            ps.setInt(2, getRestaurantID());
 
-            int rowsChanged = statement.executeUpdate();
+            ps.executeUpdate();
 
-            if (rowsChanged > 0) {
-                showInfo("Order rejected");
-                populateAvailableOrderList();
-            } else {
-                showError("No preparing order found with that ID");
-            }
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setContentText("Order rejected");
+            alert.show();
+
+            populateAvailableOrderList();
+
         } catch (Exception e) {
-            showError(e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
     @FXML
     private void markReady() {
         try {
-            String orderID = orderIDField.getText();
+            String selectedOrder = availableOrderList.getSelectionModel().getSelectedItem();
 
-            Connection conn = State.getConn();
-            PreparedStatement statement = conn.prepareStatement(
+            if (selectedOrder == null) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("No order selected");
+                alert.show();
+                return;
+            }
+
+            String orderID = selectedOrder.split("\\|")[0].trim();
+
+            PreparedStatement ps = conn.prepareStatement(
                     "UPDATE Orders " +
-                            "SET Status = 'Ready To Pickup' " +
+                            "SET OrderStatus = 'Ready For Pickup' " +
                             "WHERE Order_ID = ? " +
-                            "AND O_Restaurant_ID = ? " +
-                            "AND Status = 'Preparing'"
+                            "AND O_Restaurant_ID = ?"
             );
 
-            statement.setString(1, orderID);
-            statement.setString(2, getRestaurantID());
+            ps.setString(1, orderID);
+            ps.setInt(2, getRestaurantID());
 
-            int rowsChanged = statement.executeUpdate();
+            ps.executeUpdate();
 
-            if (rowsChanged > 0) {
-                showInfo("Order marked ready to pickup");
-                populateAvailableOrderList();
-            } else {
-                showError("No preparing order found with that ID");
-            }
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setContentText("Order marked ready for pickup");
+            alert.show();
+
+            populateAvailableOrderList();
+
         } catch (Exception e) {
-            showError(e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
@@ -215,121 +231,105 @@ public class RestaurantEmployeeController {
 
     private void updateMenuItemAvailability(int availability) {
         try {
-            String menuItemID = menuItemIDField.getText();
+            String selectedItem = menuListView.getSelectionModel().getSelectedItem();
 
-            Connection conn = State.getConn();
-            PreparedStatement statement = conn.prepareStatement(
+            if (selectedItem == null) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("No menu item selected");
+                alert.show();
+                return;
+            }
+
+            String menuItemID = selectedItem.split("\\|")[0].trim();
+
+            PreparedStatement ps = conn.prepareStatement(
                     "UPDATE Menu_Item " +
                             "SET Availability = ? " +
                             "WHERE MenuItem_ID = ? " +
                             "AND MI_Restaurant_ID = ?"
             );
 
-            String availString;
+            ps.setInt(1, availability);
+            ps.setString(2, menuItemID);
+            ps.setInt(3, getRestaurantID());
 
-            if (availability == 1) {
-                availString = "Available";
-            } else {
-                availString = "Unavailable";
-            }
+            ps.executeUpdate();
 
-            statement.setInt(1, availability);
-            statement.setString(2, menuItemID);
-            statement.setString(3, getRestaurantID());
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setContentText("Menu item updated");
+            alert.show();
 
-            int rowsChanged = statement.executeUpdate();
+            populateMenuList();
 
-            if (rowsChanged > 0) {
-                showInfo("Menu item updated");
-            } else {
-                showError("No menu item found with that ID");
-            }
         } catch (Exception e) {
-            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
     @FXML
     private void updateAccount() {
+        String userName = userNameField.getText().isEmpty() ? State.userName : userNameField.getText();
+        String passWord = passWordField.getText().isEmpty() ? State.passWord : passWordField.getText();
+        String name = nameField.getText().isEmpty() ? State.name : nameField.getText();
+        String phoneNumber = phoneNumberField.getText().isEmpty() ? State.phoneNumber : phoneNumberField.getText();
+        String eMailAddress = eMailAddressField.getText().isEmpty() ? State.eMailAddress : eMailAddressField.getText();
+
         try {
-            String oldUserName = State.userName;
-
-            String userName = userNameField.getText();
-            String passWord = passWordField.getText();
-            String name = nameField.getText();
-            String phoneNumber = phoneNumberField.getText();
-            String eMailAddress = eMailAddressField.getText();
-
-            Connection conn = State.getConn();
-            PreparedStatement statement = conn.prepareStatement(
+            PreparedStatement ps = conn.prepareStatement(
                     "UPDATE Restaurant_Worker " +
                             "SET RW_Name = ?, RW_PhoneNum = ?, Email = ?, RW_Username = ?, RW_Password = ? " +
                             "WHERE RW_Username = ?"
             );
 
-            statement.setString(1, name);
-            statement.setString(2, phoneNumber);
-            statement.setString(3, eMailAddress);
-            statement.setString(4, userName);
-            statement.setString(5, passWord);
-            statement.setString(6, oldUserName);
+            ps.setString(1, name);
+            ps.setString(2, phoneNumber);
+            ps.setString(3, eMailAddress);
+            ps.setString(4, userName);
+            ps.setString(5, passWord);
+            ps.setString(6, State.userName);
 
-            int rowsChanged = statement.executeUpdate();
+            ps.executeUpdate();
 
-            if (rowsChanged > 0) {
-                State.userName = userName;
-                State.passWord = passWord;
-                State.name = name;
-                State.phoneNumber = phoneNumber;
-                State.eMailAddress = eMailAddress;
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setContentText("Account Updated");
+            alert.show();
 
-                showInfo("Account updated");
-            } else {
-                showError("Account could not be updated");
-            }
         } catch (Exception e) {
-            showError(e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
-    private String getRestaurantID() throws Exception {
-        Connection conn = State.getConn();
-
-        PreparedStatement statement = conn.prepareStatement(
+    private int getRestaurantID() throws Exception {
+        PreparedStatement ps = conn.prepareStatement(
                 "SELECT RW_Restaurant_ID " +
                         "FROM Restaurant_Worker " +
                         "WHERE RW_Username = ?"
         );
 
-        statement.setString(1, State.userName);
-        ResultSet rs = statement.executeQuery();
+        ps.setString(1, State.userName);
+
+        ResultSet rs = ps.executeQuery();
 
         if (rs.next()) {
-            return rs.getString("RW_Restaurant_ID");
+            return rs.getInt("RW_Restaurant_ID");
         }
 
         throw new Exception("Could not find restaurant for this worker");
     }
 
-    private void showInfo(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setContentText(message);
-        alert.show();
-    }
-
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setContentText(message);
-        alert.show();
-    }
-
     @FXML
     private void returnToLanding() {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("landingScene.fxml"));
+
         try {
             Pane pane = loader.load();
             anchorPane.getChildren().clear();
             anchorPane.getChildren().add(pane);
+            State.reset();
         } catch (IOException e) {
             e.printStackTrace();
         }

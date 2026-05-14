@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 
@@ -13,8 +14,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Optional;
 
 public class RestaurantOwnerController {
+
+    private Connection conn;
 
     @FXML
     private AnchorPane anchorPane;
@@ -32,26 +36,31 @@ public class RestaurantOwnerController {
     private TextField restaurantNameField;
     @FXML
     private TextField restaurantAddressField;
-
-    @FXML
-    private TextField orderIDField;
-    @FXML
-    private TextField menuItemIDField;
-    @FXML
-    private TextField menuItemNameField;
-    @FXML
-    private TextField menuItemPriceField;
     @FXML
     private ListView<String> availableOrderList;
     @FXML
     private ListView<String> menuListView;
+    @FXML
+    private ListView<String> historyListView;
 
     @FXML
     private void initialize() {
         try {
-            Connection conn = State.getConn();
+            conn = State.getConn();
 
-            PreparedStatement statement = conn.prepareStatement(
+            populateAccountFields();
+            populateAvailableOrderList();
+            populateMenuList();
+            populateHistoryList();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void populateAccountFields() {
+        try {
+            PreparedStatement ps = conn.prepareStatement(
                     "SELECT ro.OwnerName, ro.RO_PhoneNum, ro.Email, ro.RO_Username, ro.RO_Password, " +
                             "r.RestaurantName, r.Address " +
                             "FROM Restaurant_Owner ro " +
@@ -59,8 +68,9 @@ public class RestaurantOwnerController {
                             "WHERE ro.RO_Username = ?"
             );
 
-            statement.setString(1, State.userName);
-            ResultSet rs = statement.executeQuery();
+            ps.setString(1, State.userName);
+
+            ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
                 nameField.setText(rs.getString("OwnerName"));
@@ -72,28 +82,55 @@ public class RestaurantOwnerController {
                 restaurantAddressField.setText(rs.getString("Address"));
             }
 
-            populateAvailableOrderList();
-            populateMenuList();
         } catch (Exception e) {
-            showError(e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
-    @FXML
-    private void populateMenuList() {
-        if (menuListView == null) return;
-
-        menuListView.getItems().clear();
-
+    private void populateAvailableOrderList() {
         try {
-            Connection conn = State.getConn();
+            availableOrderList.getItems().clear();
+
+            PreparedStatement ps = conn.prepareStatement(
+                    "SELECT Order_ID, O_Customer_ID, OrderStatus " +
+                            "FROM Orders " +
+                            "WHERE O_Restaurant_ID = ? " +
+                            "AND OrderStatus = 'Order Placed'"
+            );
+
+            ps.setInt(1, getRestaurantID());
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                availableOrderList.getItems().add(
+                        rs.getString("Order_ID") + " | " +
+                                rs.getString("O_Customer_ID") + " | " +
+                                rs.getString("OrderStatus")
+                );
+            }
+
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
+        }
+    }
+
+    private void populateMenuList() {
+        try {
+            menuListView.getItems().clear();
+
             PreparedStatement ps = conn.prepareStatement(
                     "SELECT MenuItem_ID, MenuItemName, Price, Availability " +
                             "FROM Menu_Item " +
                             "WHERE MI_Restaurant_ID = ?"
             );
 
-            ps.setString(1, getRestaurantID());
+            ps.setInt(1, getRestaurantID());
+
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
@@ -106,104 +143,94 @@ public class RestaurantOwnerController {
             }
 
         } catch (Exception e) {
-            showError(e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
-    @FXML
-    private void populateAvailableOrderList() {
-        if (availableOrderList == null) {
-            return;
-        }
-
-        availableOrderList.getItems().clear();
-
+    private void populateHistoryList() {
         try {
-            ResultSet rs = getAvailableOrders();
-
-            while (rs.next()) {
-                String orderInfo = "Order ID: " + rs.getString("Order_ID") +
-                        " | Customer ID: " + rs.getString("O_Customer_ID") +
-                        " | Status: " + rs.getString("Status");
-
-                availableOrderList.getItems().add(orderInfo);
-            }
-        } catch (Exception e) {
-            showError(e.getMessage());
-        }
-    }
-
-    private ResultSet getAvailableOrders() throws Exception {
-        Connection conn = State.getConn();
-
-        PreparedStatement statement = conn.prepareStatement(
-                "SELECT * " +
-                        "FROM Orders " +
-                        "WHERE O_Restaurant_ID = ? " +
-                        "AND Status = 'Preparing'"
-        );
-
-        statement.setString(1, getRestaurantID());
-        return statement.executeQuery();
-    }
-
-    @FXML
-    private void rejectOrder() {
-        try {
-            String orderID = orderIDField.getText();
-
-            Connection conn = State.getConn();
-            PreparedStatement statement = conn.prepareStatement(
-                    "UPDATE Orders " +
-                            "SET Status = 'Rejected' " +
-                            "WHERE Order_ID = ? " +
-                            "AND O_Restaurant_ID = ? " +
-                            "AND Status = 'Preparing'"
+            PreparedStatement getTotalOrders = conn.prepareStatement(
+                    "SELECT OrderStatus,\n" +
+                            "COUNT(*) AS TotalOrders\n" +
+                            "FROM Orders\n" +
+                            "WHERE O_Restaurant_ID = ?\n" +
+                            "GROUP BY OrderStatus;"
             );
 
-            statement.setString(1, orderID);
-            statement.setString(2, getRestaurantID());
+            getTotalOrders.setInt(1, getRestaurantID());
+            ResultSet totalOrders = getTotalOrders.executeQuery();
 
-            int rowsChanged = statement.executeUpdate();
+            historyListView.getItems().add("Orders:");
 
-            if (rowsChanged > 0) {
-                showInfo("Order rejected");
-                populateAvailableOrderList();
-            } else {
-                showError("No preparing order found with that ID");
+            while (totalOrders.next()) {
+                historyListView.getItems().add(totalOrders.getString(1) + " " + totalOrders.getString(2));
+            }
+
+            PreparedStatement getMostOrdered = conn.prepareStatement(
+                    "SELECT Menu_Item.MenuItemName,\n" +
+                            "COUNT(*) AS TimesOrdered\n" +
+                            "FROM Order_Item\n" +
+                            "JOIN Menu_Item\n" +
+                            "ON Order_Item.OI_MenuItem_ID = Menu_Item.MenuItem_ID\n" +
+                            "WHERE Menu_Item.MI_Restaurant_ID = ?\n" +
+                            "GROUP BY Menu_Item.MenuItemName " +
+                            "ORDER BY TimesOrdered "
+            );
+
+            getMostOrdered.setInt(1, getRestaurantID());
+            ResultSet mostOrdered = getMostOrdered.executeQuery();
+
+            historyListView.getItems().add("Items Ordered: ");
+
+            while (mostOrdered.next()) {
+                historyListView.getItems().add(mostOrdered.getString(1) + " " + mostOrdered.getString(2));
             }
         } catch (Exception e) {
-            showError(e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
     @FXML
     private void markReady() {
         try {
-            String orderID = orderIDField.getText();
+            String selectedOrder = availableOrderList.getSelectionModel().getSelectedItem();
 
-            Connection conn = State.getConn();
-            PreparedStatement statement = conn.prepareStatement(
+            if (selectedOrder == null) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("No order selected");
+                alert.show();
+                return;
+            }
+
+            String orderID = selectedOrder.split("\\|")[0].trim();
+
+            PreparedStatement ps = conn.prepareStatement(
                     "UPDATE Orders " +
-                            "SET Status = 'Ready To Pickup' " +
+                            "SET OrderStatus = 'Ready For Pickup' " +
                             "WHERE Order_ID = ? " +
                             "AND O_Restaurant_ID = ? " +
-                            "AND Status = 'Preparing'"
+                            "AND OrderStatus = 'Order Placed'"
             );
 
-            statement.setString(1, orderID);
-            statement.setString(2, getRestaurantID());
+            ps.setString(1, orderID);
+            ps.setInt(2, getRestaurantID());
 
-            int rowsChanged = statement.executeUpdate();
+            ps.executeUpdate();
 
-            if (rowsChanged > 0) {
-                showInfo("Order marked ready to pickup");
-                populateAvailableOrderList();
-            } else {
-                showError("No preparing order found with that ID");
-            }
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setContentText("Order marked ready for pickup");
+            alert.show();
+
+            populateAvailableOrderList();
+
         } catch (Exception e) {
-            showError(e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
@@ -219,230 +246,229 @@ public class RestaurantOwnerController {
 
     private void updateMenuItemAvailability(int availability) {
         try {
-            String menuItemID = menuItemIDField.getText();
+            String selectedItem = menuListView.getSelectionModel().getSelectedItem();
 
-            Connection conn = State.getConn();
-            PreparedStatement statement = conn.prepareStatement(
+            if (selectedItem == null) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("No menu item selected");
+                alert.show();
+                return;
+            }
+
+            String menuItemID = selectedItem.split("\\|")[0].trim();
+
+            PreparedStatement ps = conn.prepareStatement(
                     "UPDATE Menu_Item " +
                             "SET Availability = ? " +
                             "WHERE MenuItem_ID = ? " +
                             "AND MI_Restaurant_ID = ?"
             );
 
-            statement.setInt(1, availability);
-            statement.setString(2, menuItemID);
-            statement.setString(3, getRestaurantID());
+            ps.setInt(1, availability);
+            ps.setString(2, menuItemID);
+            ps.setInt(3, getRestaurantID());
 
-            int rowsChanged = statement.executeUpdate();
+            ps.executeUpdate();
 
-            if (rowsChanged > 0) {
-                showInfo("Menu item updated");
-            } else {
-                showError("No menu item found with that ID");
-            }
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setContentText("Menu item updated");
+            alert.show();
+
+            populateMenuList();
+
         } catch (Exception e) {
-            showError(e.getMessage());
-        }
-    }
-
-    @FXML
-    private void addItem() {
-        try {
-            String itemName = menuItemNameField.getText();
-            String itemPrice = menuItemPriceField.getText();
-
-            int menuItemID = generateID();
-
-            Connection conn = State.getConn();
-            PreparedStatement statement = conn.prepareStatement(
-                    "INSERT INTO Menu_Item (MenuItem_ID, MI_Restaurant_ID, MenuItemName, Price, Availability) " +
-                            "VALUES (?, ?, ?, ?, 1)"
-            );
-
-            statement.setString(1, Integer.toString(menuItemID));
-            statement.setString(2, getRestaurantID());
-            statement.setString(3, itemName);
-            statement.setString(4, itemPrice);
-
-            statement.executeUpdate();
-            showInfo("Menu item added");
-        } catch (Exception e) {
-            showError(e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
     @FXML
     private void showAddMenuItemDialog() {
         try {
-            javafx.scene.control.TextInputDialog nameDialog =
-                    new javafx.scene.control.TextInputDialog();
+            TextInputDialog nameDialog = new TextInputDialog();
             nameDialog.setTitle("Add Menu Item");
             nameDialog.setHeaderText("Enter Menu Item Name");
             nameDialog.setContentText("Name:");
 
-            java.util.Optional<String> nameResult = nameDialog.showAndWait();
-            if (nameResult.isEmpty()) return;
+            Optional<String> nameResult = nameDialog.showAndWait();
 
-            String itemName = nameResult.get();
+            if (nameResult.isEmpty()) {
+                return;
+            }
 
-            javafx.scene.control.TextInputDialog priceDialog =
-                    new javafx.scene.control.TextInputDialog();
+            TextInputDialog priceDialog = new TextInputDialog();
             priceDialog.setTitle("Add Menu Item");
             priceDialog.setHeaderText("Enter Price");
             priceDialog.setContentText("Price:");
 
-            java.util.Optional<String> priceResult = priceDialog.showAndWait();
-            if (priceResult.isEmpty()) return;
+            Optional<String> priceResult = priceDialog.showAndWait();
 
-            String itemPrice = priceResult.get();
-
-            if (itemPrice.contains("-")) {
-                Alert negativeAlert = new Alert(Alert.AlertType.ERROR);
-                negativeAlert.setContentText("Negative prices not allowed");
-                negativeAlert.show();
+            if (priceResult.isEmpty()) {
                 return;
             }
 
-            int menuItemID = generateID();
+            String itemName = nameResult.get();
+            String itemPrice = priceResult.get();
 
-            Connection conn = State.getConn();
-            PreparedStatement statement = conn.prepareStatement(
-                    "INSERT INTO Menu_Item (MenuItem_ID, MI_Restaurant_ID, MenuItemName, Price, Availability) " +
+            if (itemName.isEmpty() || itemPrice.isEmpty()) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Item name and price are required");
+                alert.show();
+                return;
+            }
+
+            if (itemPrice.contains("-")) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Negative prices not allowed");
+                alert.show();
+                return;
+            }
+
+            PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO Menu_Item " +
+                            "(MenuItem_ID, MI_Restaurant_ID, MenuItemName, Price, Availability) " +
                             "VALUES (?, ?, ?, ?, 1)"
             );
 
-            statement.setInt(1, menuItemID);
-            statement.setString(2, getRestaurantID());
-            statement.setString(3, itemName);
-            statement.setString(4, itemPrice);
+            ps.setInt(1, generateID());
+            ps.setInt(2, getRestaurantID());
+            ps.setString(3, itemName);
+            ps.setString(4, itemPrice);
 
-            int rows = statement.executeUpdate();
+            ps.executeUpdate();
 
-            if (rows > 0) {
-                showInfo("Menu item added successfully");
-            } else {
-                showError("Failed to add menu item");
-            }
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setContentText("Menu item added");
+            alert.show();
+
+            populateMenuList();
 
         } catch (Exception e) {
-            showError(e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
     @FXML
     private void deleteSelectedMenuItem() {
         try {
-            if (menuListView == null || menuListView.getSelectionModel().getSelectedItem() == null) {
-                showError("Please select a menu item to delete");
+            String selectedItem = menuListView.getSelectionModel().getSelectedItem();
+
+            if (selectedItem == null) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("No menu item selected");
+                alert.show();
                 return;
             }
 
-            String selected = menuListView.getSelectionModel().getSelectedItem();
+            String menuItemID = selectedItem.split("\\|")[0].trim();
 
-            // format: ID | name | price | availability
-            String menuItemID = selected.split(" \\| ")[0];
-
-            Connection conn = State.getConn();
-
-            PreparedStatement statement = conn.prepareStatement(
+            PreparedStatement ps = conn.prepareStatement(
                     "DELETE FROM Menu_Item " +
                             "WHERE MenuItem_ID = ? " +
                             "AND MI_Restaurant_ID = ?"
             );
 
-            statement.setString(1, menuItemID);
-            statement.setString(2, getRestaurantID());
+            ps.setString(1, menuItemID);
+            ps.setInt(2, getRestaurantID());
 
-            int rows = statement.executeUpdate();
+            ps.executeUpdate();
 
-            if (rows > 0) {
-                showInfo("Menu item deleted");
-                populateMenuList(); // refresh UI
-            } else {
-                showError("Could not delete menu item");
-            }
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setContentText("Menu item deleted");
+            alert.show();
+
+            populateMenuList();
 
         } catch (Exception e) {
-            showError(e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
+            e.printStackTrace();
         }
     }
 
     @FXML
     private void updateAccount() {
+        String userName = userNameField.getText().isEmpty() ? State.userName : userNameField.getText();
+        String passWord = passWordField.getText().isEmpty() ? State.passWord : passWordField.getText();
+        String name = nameField.getText().isEmpty() ? State.name : nameField.getText();
+        String phoneNumber = phoneNumberField.getText().isEmpty() ? State.phoneNumber : phoneNumberField.getText();
+        String eMailAddress = eMailAddressField.getText().isEmpty() ? State.eMailAddress : eMailAddressField.getText();
+        String restaurantName = restaurantNameField.getText();
+        String restaurantAddress = restaurantAddressField.getText();
+
         try {
-            String oldUserName = State.userName;
-
-            String userName = userNameField.getText();
-            String passWord = passWordField.getText();
-            String name = nameField.getText();
-            String phoneNumber = phoneNumberField.getText();
-            String eMailAddress = eMailAddressField.getText();
-            String restaurantName = restaurantNameField.getText();
-            String restaurantAddress = restaurantAddressField.getText();
-
-            Connection conn = State.getConn();
             conn.setAutoCommit(false);
 
-            try {
-                PreparedStatement ownerStatement = conn.prepareStatement(
-                        "UPDATE Restaurant_Owner " +
-                                "SET OwnerName = ?, RO_PhoneNum = ?, Email = ?, RO_Username = ?, RO_Password = ? " +
-                                "WHERE RO_Username = ?"
-                );
+            PreparedStatement ownerStatement = conn.prepareStatement(
+                    "UPDATE Restaurant_Owner " +
+                            "SET OwnerName = ?, RO_PhoneNum = ?, Email = ?, RO_Username = ?, RO_Password = ? " +
+                            "WHERE RO_Username = ?"
+            );
 
-                ownerStatement.setString(1, name);
-                ownerStatement.setString(2, phoneNumber);
-                ownerStatement.setString(3, eMailAddress);
-                ownerStatement.setString(4, userName);
-                ownerStatement.setString(5, passWord);
-                ownerStatement.setString(6, oldUserName);
-                ownerStatement.executeUpdate();
+            ownerStatement.setString(1, name);
+            ownerStatement.setString(2, phoneNumber);
+            ownerStatement.setString(3, eMailAddress);
+            ownerStatement.setString(4, userName);
+            ownerStatement.setString(5, passWord);
+            ownerStatement.setString(6, State.userName);
 
-                PreparedStatement restaurantStatement = conn.prepareStatement(
-                        "UPDATE Restaurant " +
-                                "SET RestaurantName = ?, Address = ? " +
-                                "WHERE Restaurant_ID = ?"
-                );
+            ownerStatement.executeUpdate();
 
-                restaurantStatement.setString(1, restaurantName);
-                restaurantStatement.setString(2, restaurantAddress);
-                restaurantStatement.setString(3, getRestaurantID());
-                restaurantStatement.executeUpdate();
+            PreparedStatement restaurantStatement = conn.prepareStatement(
+                    "UPDATE Restaurant " +
+                            "SET RestaurantName = ?, Address = ? " +
+                            "WHERE Restaurant_ID = ?"
+            );
 
-                conn.commit();
+            restaurantStatement.setString(1, restaurantName);
+            restaurantStatement.setString(2, restaurantAddress);
+            restaurantStatement.setInt(3, getRestaurantID());
 
-                State.userName = userName;
-                State.passWord = passWord;
-                State.name = name;
-                State.phoneNumber = phoneNumber;
-                State.eMailAddress = eMailAddress;
+            restaurantStatement.executeUpdate();
 
-                showInfo("Account updated");
-            } catch (Exception e) {
-                conn.rollback();
-                throw e;
-            } finally {
-                conn.setAutoCommit(true);
-            }
+            conn.commit();
+
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setContentText("Account Updated");
+            alert.show();
+
         } catch (Exception e) {
-            showError(e.getMessage());
+            try {
+                conn.rollback();
+            } catch (Exception rollbackException) {
+                rollbackException.printStackTrace();
+            }
+
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
+
+        } finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private String getRestaurantID() throws Exception {
-        Connection conn = State.getConn();
-
-        PreparedStatement statement = conn.prepareStatement(
+    private int getRestaurantID() throws Exception {
+        PreparedStatement ps = conn.prepareStatement(
                 "SELECT RO_Restaurant_ID " +
                         "FROM Restaurant_Owner " +
                         "WHERE RO_Username = ?"
         );
 
-        statement.setString(1, State.userName);
-        ResultSet rs = statement.executeQuery();
+        ps.setString(1, State.userName);
+
+        ResultSet rs = ps.executeQuery();
 
         if (rs.next()) {
-            return rs.getString("RO_Restaurant_ID");
+            return rs.getInt("RO_Restaurant_ID");
         }
 
         throw new Exception("Could not find restaurant for this owner");
@@ -459,25 +485,15 @@ public class RestaurantOwnerController {
         return id;
     }
 
-    private void showInfo(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setContentText(message);
-        alert.show();
-    }
-
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setContentText(message);
-        alert.show();
-    }
-
     @FXML
     private void returnToLanding() {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("landingScene.fxml"));
+
         try {
             Pane pane = loader.load();
             anchorPane.getChildren().clear();
             anchorPane.getChildren().add(pane);
+            State.reset();
         } catch (IOException e) {
             e.printStackTrace();
         }

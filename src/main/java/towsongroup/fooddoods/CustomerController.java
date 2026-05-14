@@ -100,7 +100,7 @@ public class CustomerController {
             restIDResult.next();
             String restID = restIDResult.getString(1);
 
-            PreparedStatement ps = conn.prepareStatement("SELECT MenuItemName, Price, Availability FROM Menu_Item WHERE MI_Restaurant_ID = ?");
+            PreparedStatement ps = conn.prepareStatement("SELECT MenuItemName, Price, Availability FROM Menu_Item WHERE MI_Restaurant_ID = ? AND Availability = 1");
             ps.setString(1, restID);
             ResultSet rs = ps.executeQuery();
 
@@ -127,19 +127,19 @@ public class CustomerController {
 
             historyListView.getItems().add("Total orders made: " + totalOrders.getInt(1));
 
-//            PreparedStatement getTotalSpent = conn.prepareStatement(
-//                    "SELECT SUM(Order_Item.Price * Order_Item.Quantity) AS TotalSpent\n" +
-//                            "FROM Orders\n" +
-//                            "JOIN Order_Item\n" +
-//                            "ON Orders.Order_ID = Order_Item.OI_Order_ID\n" +
-//                            "WHERE Orders.O_Customer_ID = ?;"
-//            );
-//
-//            getTotalSpent.setInt(1, State.id);
-//            ResultSet totalSpent = getTotalSpent.executeQuery();
-//            totalSpent.next();
-//
-//            historyListView.getItems().add("Total money spent: " + totalSpent.getInt(1));
+            PreparedStatement getTotalSpent = conn.prepareStatement(
+                    "SELECT ROUND(SUM(Menu_Item.Price), 2) AS TotalSpent\n" +
+                            "FROM Orders\n" +
+                            "JOIN Order_Item ON Orders.Order_ID = Order_Item.OI_Order_ID\n" +
+                            "JOIN Menu_Item ON Order_Item.OI_MenuItem_ID = Menu_Item.MenuItem_ID\n" +
+                            "WHERE Orders.O_Customer_ID = ?;"
+            );
+
+            getTotalSpent.setInt(1, State.id);
+            ResultSet totalSpent = getTotalSpent.executeQuery();
+            totalSpent.next();
+
+            historyListView.getItems().add("Total money spent: $" + totalSpent.getInt(1));
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText(e.getMessage());
