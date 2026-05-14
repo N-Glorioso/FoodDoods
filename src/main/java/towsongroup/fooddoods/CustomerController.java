@@ -2,6 +2,7 @@ package towsongroup.fooddoods;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class CustomerController {
@@ -42,46 +44,52 @@ public class CustomerController {
     private ListView<String> orderListView;
     @FXML
     private ListView<String> ordersListView;
-    private int orderID;
+    private ArrayList<Integer> preOrderItems;
 
     @FXML
     private void initialize() {
         try {
+            preOrderItems = new ArrayList<>();
             conn = State.getConn();
-            PreparedStatement ps = conn.prepareStatement("SELECT RestaurantName FROM Restaurant");
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                restaurantListView.getItems().add(rs.getString(1));
-            }
-
-            restaurantListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-                if (newValue != null) {
-                    populateMenu();
-                }
-            });
+            populateRestaurantList();
 
             populateOrdersList();
-
-            // Generate ID and check availability
-            orderID = (int) (Math.random() * 1000000);
-            ArrayList<Integer> usedIDs = State.getIDs();
-
-            while (true) {
-                if (usedIDs.contains(orderID)) {
-                    orderID = (int) (Math.random() * 1000000);
-                } else {
-                    break;
-                }
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void populateRestaurantList() throws SQLException {
+        PreparedStatement ps = conn.prepareStatement("SELECT RestaurantName FROM Restaurant");
+        ResultSet rs = ps.executeQuery();
+
+        try {
+            while (rs.next()) {
+                restaurantListView.getItems().add(rs.getString(1));
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("unable to load restaurants");
+            alert.show();
+        }
+
+        restaurantListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                populateMenu();
+            }
+        });
+    }
+
     private void populateMenu() {
         try {
             menuListView.getItems().clear();
+            if (!preOrderItems.isEmpty()) {
+                preOrderItems.clear();
+                populateOrderList();
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setContentText("Order cleared. You can only order from one restaurant at a time.");
+                alert.show();
+            }
 
             PreparedStatement getRestID = conn.prepareStatement("SELECT Restaurant_ID FROM Restaurant WHERE RestaurantName = ?");
             getRestID.setString(1, restaurantListView.getSelectionModel().getSelectedItem());
@@ -105,53 +113,25 @@ public class CustomerController {
     @FXML
     private void addToOrder() {
         try {
-            // Insert order item into order item table
-            PreparedStatement ps = conn.prepareStatement("INSERT INTO Order_Item (OrderItem_ID, OI_Order_ID, OI_MenuItem_ID, Quantity, Price)\n" +
-                    "VALUES (?, ?, ?, ?, ?);");
-
+            // Get menu_item id and add it to a list to be put together in an order
             String selectedItem = menuListView.getSelectionModel().getSelectedItem();
 
             if (selectedItem == null) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("No item selected");
+                alert.show();
                 return;
             }
 
-            String menuItemName = selectedItem.split(" \\| ")[0];
+            selectedItem = selectedItem.split("\\|")[0];
+            selectedItem = selectedItem.trim();
 
-            PreparedStatement getMenuItemID = conn.prepareStatement(
-                    "SELECT MenuItem_ID FROM Menu_Item WHERE MenuItemName = ?"
-            );
+            PreparedStatement getMenuItemID = conn.prepareStatement("SELECT MenuItem_ID FROM Menu_Item WHERE MenuItemName = ?");
+            getMenuItemID.setString(1, selectedItem);
 
-            getMenuItemID.setString(1, menuItemName);
-            ResultSet menuItemIDResult = getMenuItemID.executeQuery();
-            menuItemIDResult.next();
-            String menuItemID = menuItemIDResult.getString(1);
-
-            // Generate ID and check availability
-            int orderItemID = (int) (Math.random() * 1000000);
-            ArrayList<Integer> usedIDs = State.getIDs();
-
-            while (true) {
-                if (usedIDs.contains(orderItemID)) {
-                    orderItemID = (int) (Math.random() * 1000000);
-                } else {
-                    break;
-                }
-            }
-
-            ps.setString(1, Integer.toString(orderItemID));
-            ps.setString(2, Integer.toString(orderID));
-            ps.setString(3, menuItemID);
-            ps.setString(4, "1");
-
-            PreparedStatement getItemPrice = conn.prepareStatement("SELECT Price FROM Menu_Item WHERE MenuItem_ID = ?");
-            getItemPrice.setString(1, menuItemID);
-            ResultSet menuItemRS = getItemPrice.executeQuery();
-            menuItemRS.next();
-            String itemPrice = menuItemRS.getString(1);
-
-            ps.setString(5, itemPrice);
-
-            ps.executeUpdate();
+            ResultSet menuItemID = getMenuItemID.executeQuery();
+            menuItemID.next();
+            preOrderItems.add(menuItemID.getInt(1));
 
             populateOrderList();
         } catch (Exception e) {
@@ -162,7 +142,26 @@ public class CustomerController {
     @FXML
     private void removeFromOrder() {
         try {
-            PreparedStatement ps = conn.prepareStatement("DELETE FROM Order_Item WHERE OrderItem_ID = ?");
+            String selectedItem = orderListView.getSelectionModel().getSelectedItem();
+
+            if (selectedItem == null) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("No item selected");
+                alert.show();
+                return;
+            }
+
+            selectedItem = selectedItem.split("\\|")[0];
+            selectedItem = selectedItem.trim();
+
+            PreparedStatement getMenuItemID = conn.prepareStatement("SELECT MenuItem_ID FROM Menu_Item WHERE MenuItemName = ?");
+            getMenuItemID.setString(1, selectedItem);
+
+            ResultSet menuItemID = getMenuItemID.executeQuery();
+            menuItemID.next();
+            preOrderItems.remove((Integer) menuItemID.getInt(1));
+
+            populateOrderList();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -172,8 +171,20 @@ public class CustomerController {
     private void placeOrder(){
         try {
             // Insert order into order table
-            PreparedStatement addOrder = conn.prepareStatement("INSERT INTO Orders (Order_ID, O_Restaurant_ID, O_Customer_ID, Status)\n" +
+            PreparedStatement addOrder = conn.prepareStatement("INSERT INTO Orders (Order_ID, O_Restaurant_ID, O_Customer_ID, OrderStatus)\n" +
                     "VALUES (?, ?, ?, ?)");
+
+            // Generate ID and check availability
+            int orderID = (int) (Math.random() * 1000000);
+            ArrayList<Integer> usedIDs = State.getIDs();
+
+            while (true) {
+                if (usedIDs.contains(orderID)) {
+                    orderID = (int) (Math.random() * 1000000);
+                } else {
+                    break;
+                }
+            }
 
             addOrder.setString(1, Integer.toString(orderID));
 
@@ -185,19 +196,41 @@ public class CustomerController {
 
             addOrder.setString(2, restID);
 
-            PreparedStatement getCustID = conn.prepareStatement("SELECT C_ID FROM Customer WHERE C_Name = ?");
-            getCustID.setString(1, State.name);
-            ResultSet custIDResult = getCustID.executeQuery();
-            custIDResult.next();
-            String custID = custIDResult.getString(1);
-
-            addOrder.setString(3, custID);
+            addOrder.setInt(3, State.id);
 
             addOrder.setString(4, "Order sent");
 
             addOrder.executeUpdate();
+
+            PreparedStatement addOrderItem = conn.prepareStatement("INSERT INTO Order_Item (OrderItem_ID, OI_Order_ID, OI_MenuItem_ID)" +
+                    "VALUES (?, ?, ?)");
+
+            for (Integer item : preOrderItems) {
+                int orderItemID = (int) (Math.random() * 1000000);
+                usedIDs = State.getIDs();
+
+                while (true) {
+                    if (usedIDs.contains(orderID)) {
+                        orderItemID = (int) (Math.random() * 1000000);
+                    } else {
+                        break;
+                    }
+                }
+
+                addOrderItem.setInt(1, orderItemID);
+                addOrderItem.setInt(2, orderID);
+                addOrderItem.setInt(3, item);
+
+                addOrderItem.executeUpdate();
+            }
+
+            preOrderItems.clear();
+            populateOrderList();
+            populateOrdersList();
         } catch (Exception e) {
-            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
@@ -205,29 +238,24 @@ public class CustomerController {
         try {
             orderListView.getItems().clear();
 
-            PreparedStatement ps = conn.prepareStatement(
-                    "SELECT Menu_Item.MenuItemName, Order_Item.Quantity, Order_Item.Price " +
-                            "FROM Order_Item " +
-                            "JOIN Menu_Item ON Order_Item.OI_MenuItem_ID = Menu_Item.MenuItem_ID " +
-                            "WHERE Order_Item.OI_Order_ID = ?"
+            PreparedStatement getMenuItemInfo = conn.prepareStatement(
+                    "SELECT Menu_Item.MenuItemName, Menu_Item.price FROM Menu_Item WHERE MenuItem_ID = ?"
             );
 
-            ps.setInt(1, orderID);
+            int i = 0;
+            for (Integer item : preOrderItems) {
+                getMenuItemInfo.setInt(1, preOrderItems.get(i++));
 
-            ResultSet rs = ps.executeQuery();
+                ResultSet menuItemInfo = getMenuItemInfo.executeQuery();
+                menuItemInfo.next();
 
-            while (rs.next()) {
-
-                String item =
-                        rs.getString("MenuItemName") + " | Qty: " +
-                                rs.getString("Quantity") + " | $" +
-                                rs.getString("Price");
-
-                orderListView.getItems().add(item);
+                orderListView.getItems().add(menuItemInfo.getString(1) + " | $" + menuItemInfo.getString(2));
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
@@ -235,44 +263,73 @@ public class CustomerController {
         try {
             ordersListView.getItems().clear();
 
+//            SELECT o.Order_ID, o.OrderStatus, r.RestaurantName
+//            FROM Orders o
+//            JOIN Restaurant r ON o.O_Restaurant_ID = r.Restaurant_ID
+//            JOIN Customer c ON o.O_Customer_ID = c.C_ID
+//            WHERE c.C_Username = 'lpressi1';
+
             PreparedStatement ps = conn.prepareStatement(
-                    "SELECT Orders.Order_ID, Restaurant.RestaurantName, Customer.Address, Orders.Status " +
-                            "FROM Driver " +
-                            "JOIN Orders ON Driver.D_Order_ID = Orders.Order_ID " +
-                            "JOIN Restaurant ON Orders.O_Restaurant_ID = Restaurant.Restaurant_ID " +
-                            "JOIN Customer ON Orders.O_Customer_ID = Customer.C_ID " +
-                            "WHERE Customer.C_Username = ?"
+                    "SELECT o.Order_ID, o.OrderStatus, r.RestaurantName " +
+                            "FROM Orders o " +
+                            "JOIN Restaurant r on o.O_Restaurant_ID = r.Restaurant_ID " +
+                            "JOIN Customer c on o.O_Customer_ID = c.C_ID " +
+                            "WHERE C_ID = ?"
             );
 
-            ps.setString(1, State.userName);
+            ps.setInt(1, State.id);
 
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
                 ordersListView.getItems().add(
                         rs.getString("Order_ID") + " | " +
-                                rs.getString("RestaurantName") + " | " +
-                                rs.getString("Address") + " | " +
-                                rs.getString("Status")
+                                rs.getString("OrderStatus") + " | " +
+                                rs.getString("RestaurantName")
                 );
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
         }
     }
 
     @FXML
     private void updateAccount() {
-        String userName = userNameField.getText();
-        String passWord = passWordField.getText();
-        String name = nameField.getText();
-        String phoneNumber = phoneNumberField.getText();
-        String eMailAddress = eMailAddressField.getText();
-        String address = addressField.getText();
-        String payment = paymentField.getText();
+        String userName = (userNameField.getText().isEmpty() ? State.userName : userNameField.getText());
+        String passWord = (passWordField.getText().isEmpty() ? State.passWord : passWordField.getText());
+        String name = (nameField.getText().isEmpty() ? State.name : nameField.getText());
+        String phoneNumber = (phoneNumberField.getText().isEmpty() ? State.phoneNumber : phoneNumberField.getText());
+        String eMailAddress = (eMailAddressField.getText().isEmpty() ? State.eMailAddress : eMailAddressField.getText());
+        String address = (addressField.getText().isEmpty() ? State.homeAddress : addressField.getText());
+        String payment = (paymentField.getText().isEmpty() ? State.payment : paymentField.getText());
 
-        // implement the SQL query
+        try {
+            PreparedStatement updateAccount = conn.prepareStatement(
+                    "UPDATE Customer SET C_Name=?, C_Phone_Num=?, C_Email=?, Address=?, Payment_Info=?, C_Username=?, C_Password=? WHERE C_ID=?;"
+            );
+
+            updateAccount.setString(1, name);
+            updateAccount.setString(2, phoneNumber);
+            updateAccount.setString(3, eMailAddress);
+            updateAccount.setString(4, address);
+            updateAccount.setString(5, payment);
+            updateAccount.setString(6, userName);
+            updateAccount.setString(7, passWord);
+            updateAccount.setInt(8, State.id);
+
+            updateAccount.executeUpdate();
+
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setContentText("Account Updated");
+            alert.show();
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+            alert.show();
+        }
     }
 
     @FXML
